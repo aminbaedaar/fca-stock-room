@@ -1,0 +1,10 @@
+# Supabase CLI settings (used by `supabase link`, `db push` and `functions deploy`).
+project_id = "fca-stock-room"
+
+[functions.ai-assistant]
+# The function checks the user's sign-in itself.
+verify_jwt = false
+
+[functions.monday-summary]
+# Called by the weekly schedule with a secret header, or by signed-in managers.
+verify_jwt = false

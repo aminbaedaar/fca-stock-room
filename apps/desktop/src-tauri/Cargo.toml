@@ -1,0 +1,22 @@
+[package]
+name = "fca-stock-room"
+version = "1.0.0"
+description = "FCA Stock Room"
+authors = ["First Choice Africa Limited"]
+edition = "2021"
+
+[lib]
+name = "fca_stock_room_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-updater = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-notification = "2"
+tauri-plugin-process = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

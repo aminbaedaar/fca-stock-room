@@ -1,0 +1,12 @@
+{
+  "name": "@fca/desktop",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "tauri": "tauri",
+    "icons": "tauri icon app-icon.png && node -e \"require('fs').rmSync('src-tauri/icons/android',{recursive:true,force:true});require('fs').rmSync('src-tauri/icons/ios',{recursive:true,force:true})\""
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "2.1.0"
+  }
+}

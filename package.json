@@ -1,0 +1,23 @@
+{
+  "name": "fca-stock-room",
+  "private": true,
+  "version": "1.0.0",
+  "description": "FCA Stock Room - stock management for First Choice Africa Limited",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @fca/web",
+    "build": "npm run sync-core && npm run build -w @fca/web",
+    "test": "npm test -w @fca/core",
+    "typecheck": "npm run typecheck -w @fca/core && npm run typecheck -w @fca/web",
+    "sync-core": "node scripts/sync-core.mjs",
+    "seed": "node --experimental-strip-types --no-warnings scripts/make-seed.mjs data/stock-report-2026-10-26.xlsx",
+    "desktop:dev": "npm run tauri -w @fca/desktop -- dev",
+    "desktop:build": "npm run tauri -w @fca/desktop -- build"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
