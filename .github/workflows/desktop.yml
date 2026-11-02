@@ -1,6 +1,7 @@
-# Builds the desktop installers (macOS .dmg for Apple Silicon + Intel,
-# Windows .exe/.msi) and publishes them as a GitHub Release. The desktop app
-# checks these releases for auto-updates.
+# Builds the Windows installer (.exe/.msi) and publishes it as a GitHub
+# Release; the desktop app checks these releases for auto-updates.
+# The Mac app is built on your Mac and added to the same release with
+# scripts/release-mac.sh (GitHub's Mac machines are often unavailable).
 # Run it by pushing a version tag, e.g.:  git tag v1.0.1 && git push --tags
 name: Desktop installers
 
@@ -17,10 +18,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Intel Mac runner (easier to get than Apple-chip ones); still builds
-          # one universal app for Apple Silicon and Intel Macs.
-          - platform: macos-15-intel
-            args: --target universal-apple-darwin
+          # To build the Mac app here too, add:
+          # - platform: macos-15-intel
+          #   args: --target universal-apple-darwin
           - platform: windows-latest
             args: ''
     runs-on: ${{ matrix.platform }}
