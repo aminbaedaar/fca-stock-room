@@ -43,6 +43,8 @@ jobs:
       - name: Make app icons from the logo
         run: npm run icons -w @fca/desktop
 
+      # Version tag (v1.0.1): build and publish a GitHub Release.
+      # Manual run: build only, installers are attached to the run as a download.
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -61,9 +63,20 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           projectPath: apps/desktop
-          tagName: ${{ github.ref_name }}
-          releaseName: 'FCA Stock Room ${{ github.ref_name }}'
+          tagName: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
+          releaseName: ${{ startsWith(github.ref, 'refs/tags/') && format('FCA Stock Room {0}', github.ref_name) || '' }}
           releaseBody: 'Download the installer for your computer below: .dmg for Mac, -setup.exe for Windows.'
           releaseDraft: false
           includeUpdaterJson: true
           args: ${{ matrix.args }}
+
+      - name: Keep installers from a trial build
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: installers-${{ matrix.platform }}
+          path: |
+            apps/desktop/src-tauri/target/**/release/bundle/dmg/*.dmg
+            apps/desktop/src-tauri/target/**/release/bundle/nsis/*.exe
+            apps/desktop/src-tauri/target/**/release/bundle/msi/*.msi
+          retention-days: 14
