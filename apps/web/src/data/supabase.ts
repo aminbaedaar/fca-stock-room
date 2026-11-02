@@ -2,6 +2,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Count, Item, Member, Move, Report, StockRequest } from '@fca/core';
 import { ServerError, type Backend } from './backend';
 import type { Op, Snapshot } from './types';
+import { localAssistant } from './localAssistant';
 
 // Real backend: Supabase (database, login, live updates, server functions).
 
@@ -17,6 +18,8 @@ function sb(): SupabaseClient {
 
 const num = (v: unknown) => (v == null ? 0 : Number(v));
 const ME_KEY = 'fca.me.v1';
+/** 'claude' uses the ai-assistant server function (needs ANTHROPIC_API_KEY); anything else is the free built-in assistant. */
+const aiMode = (import.meta.env.VITE_AI_MODE as string | undefined) ?? 'basic';
 
 /** Reads all rows of a query, 1000 at a time (the API's page size). */
 async function all<T>(build: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>, max = 20000): Promise<T[]> {
@@ -158,8 +161,15 @@ export const supabaseBackend: Backend = {
     }
   },
 
-  async ai(messages) {
+  async ai(messages, snapshot, me) {
+    // Free mode: the built-in assistant runs in the app, no Claude API key needed.
+    if (aiMode !== 'claude') return localAssistant(messages, snapshot, me);
     const { data, error } = await sb().functions.invoke('ai-assistant', { body: { messages } });
+    // Function not deployed yet (or unreachable while online): use the simple built-in helper.
+    if (error && ['FunctionsFetchError', 'FunctionsRelayError'].includes(error.name) && navigator.onLine) {
+      const reply = await localAssistant(messages, snapshot, me);
+      return { ...reply, text: `${reply.text}\n\n_Basic mode: the full AI assistant is not set up yet._` };
+    }
     if (error) {
       const ctx = (error as { context?: Response }).context;
       let msg = error.message;

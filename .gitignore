@@ -7,3 +7,4 @@ dist
 apps/desktop/src-tauri/target
 supabase/.temp
 .claude
+supabase/setup-all.sql

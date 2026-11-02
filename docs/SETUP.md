@@ -105,7 +105,12 @@ The website is HTTPS only. Every time you push changes to GitHub, Vercel updates
 
 ---
 
-## 5. Turn on the AI assistant (Claude)
+## 5. Turn on the AI assistant (Claude) — optional, paid
+
+**You can skip this step.** By default (`VITE_AI_MODE=basic`) the **Ask AI** button uses a free assistant built into the app. It answers "how many…", "what should I order", "what is running low", and turns "used 3 rolls glossy 1.27 for MTN job" into a card to confirm. The Claude assistant understands any question in plain words, but costs money per question.
+
+To switch to Claude later: do the steps below, then set `VITE_AI_MODE=claude` in `apps/web/.env` and in Vercel's Environment Variables, and redeploy. The cheapest Claude model is Haiku: add the secret `ANTHROPIC_MODEL=claude-haiku-5-5` (about 0.1 US cent per question instead of about 3 cents).
+
 
 1. Go to **console.anthropic.com**, create an account, add a payment method under **Billing** (pay per use; a typical question costs a few Rwandan francs). You can set a monthly spending limit there.
 2. **API Keys → Create Key**. Copy it (starts with `sk-ant-`). **Secret!**

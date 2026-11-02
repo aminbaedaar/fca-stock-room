@@ -1,8 +1,8 @@
 import { can, fmtCover, fmtQty, itemLabel, itemStats, needsAttention, rollLength, type Item, type Member } from '@fca/core';
 import type { AiMessage, AiProposal, AiReply, Snapshot } from './types';
 
-// A simple built-in helper used in demo mode (the real assistant runs on the
-// server with Claude). It understands a few common questions and
+// The free built-in assistant (default; the optional Claude assistant runs on
+// the server). It understands common stock questions and
 // "used 3 rolls glossy 1.27 for MTN job" style instructions.
 
 const STOP = new Set(['how', 'many', 'much', 'do', 'we', 'have', 'of', 'the', 'is', 'are', 'left', 'in', 'stock', 'for', 'a', 'an', 'used', 'use', 'took', 'take', 'out', 'received', 'got', 'add', 'added', 'rolls', 'roll', 'sheets', 'pcs', 'pieces', 'boxes', 'litres', 'metres', 'meters', 'm', 'job', 'client', 'please', 'what', 'about']);
@@ -83,5 +83,5 @@ export async function localAssistant(messages: AiMessage[], snapshot: Snapshot, 
     );
   }
 
-  return reply('In demo mode I can answer "How many glossy 1.27 rolls do we have?", "What should I order this week?", "What is running low?" or record "used 3 rolls glossy 1.27 for MTN job". The full AI assistant works once the online setup is done.');
+  return reply('I can answer questions like "How many glossy 1.27 rolls do we have?", "What should I order this week?" or "What is running low?", and record "used 3 rolls glossy 1.27 for MTN job" or "received 10 sheets foam board 5mm". Please include the item name and size.');
 }
