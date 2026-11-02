@@ -194,7 +194,7 @@ The installers are built for you by GitHub (free), so you don't need any extra s
    npx tauri signer generate -w ~/.tauri/fca-stock-room.key
    ```
 
-   Choose a password. It prints a **public key**. Your private key is saved in `~/.tauri/fca-stock-room.key`. **Back up this file.** If you lose it, existing installs cannot auto-update.
+   Choose a password. It prints a **public key**. Your private key is saved in `~/.tauri/fca-stock-room.key` (its password in `~/.tauri/fca-stock-room.password`). **Back up the `~/.tauri` folder.** If you lose it, existing installs cannot auto-update.
 2. Open `apps/desktop/src-tauri/tauri.conf.json` in TextEdit:
    - replace `REPLACE_WITH_UPDATER_PUBLIC_KEY` with the public key,
    - replace `REPLACE_OWNER/REPLACE_REPO` with your GitHub username and `fca-stock-room`.
@@ -204,6 +204,8 @@ The installers are built for you by GitHub (free), so you don't need any extra s
    - `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` = the password you chose
 
 ### Make a release (also how you publish updates)
+
+GitHub builds the **Windows** installer. The **Mac** app is built on your Mac (GitHub's Mac machines are often fully booked), using Rust, which is installed in `~/.cargo`.
 
 1. Raise the version number in **both** `apps/desktop/src-tauri/tauri.conf.json` and `apps/desktop/src-tauri/Cargo.toml` (e.g. `1.0.0` → `1.0.1`).
 2. In Terminal:
@@ -215,9 +217,16 @@ The installers are built for you by GitHub (free), so you don't need any extra s
    git push && git push --tags
    ```
 
-3. On GitHub, open **Actions** and wait ~15 minutes. Then **Releases** shows the new version with:
-   - `FCA Stock Room_1.0.1_universal.dmg` → Mac (Apple Silicon and Intel)
-   - `FCA Stock Room_1.0.1_x64-setup.exe` → Windows (or the `.msi`)
+3. On GitHub, open **Actions** and wait ~5 minutes until "Desktop installers" is green. The release now has the Windows files.
+4. Add the Mac app (builds in ~5 minutes, then uploads):
+
+   ```bash
+   ~/FCA-Stock-Room/scripts/release-mac.sh
+   ```
+
+5. **Releases** now shows:
+   - `FCA-Stock-Room_1.0.1_universal.dmg` → Mac (Apple Silicon and Intel)
+   - `FCA.Stock.Room_1.0.1_x64-setup.exe` → Windows (or the `.msi`)
 
 Desktop apps already installed check for updates at start and ask before installing.
 
