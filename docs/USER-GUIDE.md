@@ -116,15 +116,20 @@ This records the count for **every** item (this builds the history used for "use
 
 ## Job calculator — everyone (Take from stock: Staff and up)
 
-The SQM & Wastage Calculator is now part of the Stock Room.
+The SQM & Wastage Calculator is part of the Stock Room, with everything it had before.
 
-1. **Job calculator** tab: fill in the job, client and whether to add bleed.
-2. Add each **location** and its **items**: name, material, width × height in cm, quantity.
-3. On the right you see real SQM, wastage SQM (and %), total SQM, running metres, and **Stock to pull**: how many metres of which roll width, or how many sheets, with how much is in stock.
-4. **Print job sheet** prints the results (or save as PDF from the print window).
-5. **Take from stock** records the stock-outs for you: check that each line uses the right stock item and quantity (metres are converted to rolls automatically), then **Record stock out**. Client and job are filled in, so they show on *Jobs & clients*.
+1. **Job calculator** tab: fill in the job, client, who prepared it, the date and whether to add bleed.
+2. Add each **location** and its **items**: name, material, width × height in cm, quantity. Each item shows its real SQM and which roll it is on (or the panels it needs if it is wider than the roll).
+   - **Quick add:** type or paste items into the box under the items, one per line, e.g. `Banner, 2x3m - 12 pcs` or `Window sticker 90 x 120 cm 4 pcs`. You can also paste cells copied from Excel (name, width, height, quantity). Check the green preview, then press **Enter** or **Add items**. Lines without a size stay in the box.
+   - **Import pictures…** (or drag files onto a location): the print size is read from PDF, Illustrator, EPS and SVG files, and from JPG/PNG/TIFF files that have a print size (dpi). Pictures without a print size come in with an empty size for you to type.
+   - If an item's name says a different material than the one chosen (e.g. "Clear sticker" set to Glossy Sticker), a **Move it to…** button fixes it.
+3. **Material use** under each location shows the roll width chosen (and the other widths tried), running metres, total and wastage.
+4. On the right: **Stock to pull** (which stock item and how much is in stock) and a **preview of the report**, exactly as the PDF will look.
+5. **Download PDF report** saves the two-page First Choice report: job details, summary, summary by item, notes, and *Material to pull from stock*.
+6. **Open PDF report** opens a report made by the job calculator (or by the old SQM & Wastage Calculator) so you can change the job. **Undo** puts back the job you had before.
+7. **Take from stock** records the stock-outs for you: check that each line uses the right stock item and quantity (metres are converted to rolls automatically), then **Record stock out**. Client and job are filled in, so they show on *Jobs & clients*.
 
-**Managers/Bosses/Admin:** *Add or edit materials* sets roll widths (list every width you stock, e.g. 152, 127, 107; the calculator picks the one with least wastage), sheet sizes, bleed, panel overlap, and which stock item each material is taken from ("Auto" matches by name and width).
+**Managers/Bosses/Admin:** *Add or edit materials* sets roll widths (list every width you stock, e.g. 152, 127, 107; the calculator picks the one with least wastage), sheet sizes, bleed, panel overlap, and which stock item each material is taken from ("Auto" matches by name and width). A new material typed in quick add (e.g. "Frosty Sticker") is added to the list for you; check its roll widths. When Staff type a material that is not in the list, it is used for that job only.
 
 The job you are working on is kept on your device until you press **New job**.
 

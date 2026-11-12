@@ -8,3 +8,4 @@ export * from './search.ts';
 export * from './report.ts';
 export * from './importer.ts';
 export * from './sqm.ts';
+export * from './sqmText.ts';

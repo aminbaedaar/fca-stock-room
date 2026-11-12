@@ -54,8 +54,8 @@ export interface SqmJob {
   locations: SqmLocation[];
 }
 
-type Base = { error: string } | { empty: true } | { w: number; h: number; q: number; real: number };
-type Row = { it: SqmItem; mat: SqmMaterial | undefined; r: Base };
+export type SqmRowBase = { error: string } | { empty: true } | { w: number; h: number; q: number; real: number };
+export type SqmRow = { it: SqmItem; mat: SqmMaterial | undefined; r: SqmRowBase };
 type OkRow = { it: SqmItem; mat: SqmMaterial; r: { w: number; h: number; q: number; real: number } };
 type Piece = { w: number; h: number; id: string; o?: number[][] };
 type Rect = { x: number; y: number; w: number; h: number };
@@ -75,6 +75,8 @@ export interface SqmGroup {
   total: number;
   waste: number;
   panels: Record<string, Panel>;
+  /** Roll widths tried for this group, with the total SQM each would use. */
+  tried?: { W: number; len: number; total: number }[];
   sizeTxt: string;
   useTxt: string;
 }
@@ -98,7 +100,7 @@ export interface SqmStockGroup {
 export interface SqmResult {
   locs: {
     L: SqmLocation;
-    rows: Row[];
+    rows: SqmRow[];
     groups: SqmGroup[];
     items: number;
     pcs: number;
@@ -126,7 +128,7 @@ const rollTxt = (W: number) => `${mTrim(W)} m roll`;
 const sheetsTxt = (n: number) => (n === 1 ? '1 sheet' : `${n} sheets`);
 const useShort = (mat: SqmMaterial, use: number) => (mat.kind === 'roll' ? `${use.toFixed(2)} m` : sheetsTxt(use));
 
-function itemBase(it: SqmItem, mat: SqmMaterial | undefined): Base {
+function itemBase(it: SqmItem, mat: SqmMaterial | undefined): SqmRowBase {
   const w = +it.w,
     h = +it.h,
     q = Math.floor(+it.qty);
@@ -279,6 +281,7 @@ export function computeSqm(job: SqmJob): SqmResult {
   }
   function rollGroup(mat: SqmMaterial, rows: OkRow[]) {
     let best: { W: number; len: number; total: number; panels: Record<string, Panel> } | null = null;
+    const tried: { W: number; len: number; total: number }[] = [];
     for (const W of widthsOf(mat)) {
       const pp = rollPieces(rows, mat, W);
       if (!pp) continue;
@@ -290,6 +293,7 @@ export function computeSqm(job: SqmJob): SqmResult {
       if (!isFinite(len)) continue;
       len = Math.round(len * 100) / 100;
       const total = (len * W) / 1e4;
+      tried.push({ W, len, total });
       if (!best || total < best.total - EPS || (total < best.total + EPS && len < best.len)) best = { W, len, total, panels: pp.panels };
     }
     if (!best) return { error: `Bleed and panel overlap leave no printable width on the ${matSize(mat)}` };
@@ -297,6 +301,7 @@ export function computeSqm(job: SqmJob): SqmResult {
       ...best,
       use: best.len / 100,
       run: best.len / 100,
+      tried,
       sizeTxt: rollTxt(best.W),
       useTxt: `${(best.len / 100).toFixed(2)} m of ${rollTxt(best.W)}`,
     };
@@ -327,7 +332,7 @@ export function computeSqm(job: SqmJob): SqmResult {
   const stock = new Map<string, SqmStockGroup>();
   let errors = 0;
   const locs = job.locations.map((L) => {
-    const rows: Row[] = L.items.map((it) => ({ it, mat: mats[it.mat], r: itemBase(it, mats[it.mat]) }));
+    const rows: SqmRow[] = L.items.map((it) => ({ it, mat: mats[it.mat], r: itemBase(it, mats[it.mat]) }));
     rows.forEach((x) => {
       if ('error' in x.r) errors++;
     });
@@ -524,4 +529,36 @@ export function qtyFor(s: Pick<SqmStockGroup, 'mat' | 'use'>, item: Item | null 
     return { item_id: item.id, qty: len ? Math.round((metres / len) * 10000) / 10000 : metres, metres };
   }
   return { item_id: item.id, qty: s.use, metres: null };
+}
+
+// ---------- report wording (same text as the standalone app's PDF) ----------
+
+export const sqmF2 = (n: number) => (Math.round(n * 100) / 100).toFixed(2);
+const r1 = (n: number) => Math.round(n * 10) / 10;
+
+/** "3 panels of 120 × 300 cm each" for an item wider than the roll, else ''. */
+export function sqmPanelTxt(g: SqmGroup | undefined, itemId: string): string {
+  const P = g?.panels?.[itemId];
+  return P ? `${P.n} panels of ${r1(P.pw)} × ${r1(P.along)} cm each` : '';
+}
+
+export function sqmBleedTxt(job: Pick<SqmJob, 'bleedMode' | 'bleedCm'>): string {
+  return job.bleedMode === 'custom'
+    ? `Added, ${+(job.bleedCm ?? 0) || 0} cm on every side`
+    : job.bleedMode === 'yes'
+      ? "Added, using each material's bleed"
+      : 'Not added (sizes include bleed)';
+}
+
+export function sqmNotes(job: Pick<SqmJob, 'bleedMode' | 'bleedCm'>): string {
+  return `Real SQM is the finished size of each piece. Items of the same material in one location are laid out together on one roll or set of sheets, so running m, total and wastage are given per material. Where a material comes in several roll widths, the width with the least wastage is used. Wastage SQM is offcuts${job.bleedMode !== 'no' ? ' plus bleed' : ''}. Items wider than the roll are printed in panels; the panel overlap counts as wastage. Bleed: ${sqmBleedTxt(job).toLowerCase()}.`;
+}
+
+export const sqmUseShort = useShort;
+
+/** "12 November 2026", as the report writes dates (and reads them back). */
+export function sqmDate(iso: string): string {
+  if (!iso) return '';
+  const d = new Date(iso + 'T00:00:00');
+  return isNaN(+d) ? iso : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 }

@@ -1,0 +1,121 @@
+{
+ "lines": [
+  "Window sticker, 90x120 cm - 4 pcs",
+  "Banner 2x3m 12",
+  "Matte Sticker\t100\t200\t5pcs",
+  "Foamboard A1 x 3",
+  "Frosty Sticker 50 x 60 cm",
+  "Pull-up 85 x 200 qty 2",
+  "Reflective vinyl 1.2 x 0.5 m",
+  "Backlit 120x80",
+  "hello",
+  "Glossy banner 300×100cm 2 pieces",
+  "Clear sticker 30,5 x 40 cm"
+ ],
+ "out": [
+  {
+   "raw": "Window sticker, 90x120 cm - 4 pcs",
+   "name": "Window sticker",
+   "w": 90,
+   "h": 120,
+   "qty": 4,
+   "mat": "m3",
+   "newMat": null,
+   "unitNote": ""
+  },
+  {
+   "raw": "Banner 2x3m 12",
+   "name": "Banner",
+   "w": 200,
+   "h": 300,
+   "qty": 12,
+   "mat": "m1",
+   "newMat": null,
+   "unitNote": ""
+  },
+  {
+   "raw": "Matte Sticker\t100\t200\t5pcs",
+   "name": "Matte Sticker",
+   "w": 100,
+   "h": 200,
+   "qty": 5,
+   "mat": "m10",
+   "newMat": null,
+   "unitNote": "no unit, read as cm"
+  },
+  {
+   "raw": "Foamboard A1 x 3",
+   "name": "A",
+   "w": 100,
+   "h": 300,
+   "qty": 1,
+   "mat": "m5",
+   "newMat": null,
+   "unitNote": "no unit, read as m"
+  },
+  {
+   "raw": "Frosty Sticker 50 x 60 cm",
+   "name": "Frosty Sticker",
+   "w": 50,
+   "h": 60,
+   "qty": 1,
+   "mat": null,
+   "newMat": "Frosty Sticker",
+   "unitNote": ""
+  },
+  {
+   "raw": "Pull-up 85 x 200 qty 2",
+   "name": "Pull-up",
+   "w": 85,
+   "h": 200,
+   "qty": 2,
+   "mat": "m4",
+   "newMat": null,
+   "unitNote": "no unit, read as cm"
+  },
+  {
+   "raw": "Reflective vinyl 1.2 x 0.5 m",
+   "name": "Reflective vinyl",
+   "w": 120,
+   "h": 50,
+   "qty": 1,
+   "mat": "m12",
+   "newMat": null,
+   "unitNote": ""
+  },
+  {
+   "raw": "Backlit 120x80",
+   "name": "Backlit",
+   "w": 120,
+   "h": 80,
+   "qty": 1,
+   "mat": "m14",
+   "newMat": null,
+   "unitNote": "no unit, read as cm"
+  },
+  {
+   "raw": "hello",
+   "error": "no size found (write it like 2x3m or 120 x 400 cm)"
+  },
+  {
+   "raw": "Glossy banner 300×100cm 2 pieces",
+   "name": "Glossy banner",
+   "w": 300,
+   "h": 100,
+   "qty": 2,
+   "mat": "m9",
+   "newMat": null,
+   "unitNote": ""
+  },
+  {
+   "raw": "Clear sticker 30,5 x 40 cm",
+   "name": "Clear sticker",
+   "w": 30.5,
+   "h": 40,
+   "qty": 1,
+   "mat": "m11",
+   "newMat": null,
+   "unitNote": ""
+  }
+ ]
+}
