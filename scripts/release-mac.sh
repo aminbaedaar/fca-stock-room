@@ -16,7 +16,14 @@ BUNDLE=apps/desktop/src-tauri/target/universal-apple-darwin/release/bundle
 if [[ "${1:-}" != "--no-build" ]]; then
   export TAURI_SIGNING_PRIVATE_KEY="$(cat ~/.tauri/fca-stock-room.key)"
   export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="$(cat ~/.tauri/fca-stock-room.password)"
-  (cd apps/desktop && npx tauri build --target universal-apple-darwin)
+  (cd apps/desktop && npx tauri build --target universal-apple-darwin --bundles app)
+  # Make the .dmg with hdiutil: Tauri's own dmg step can get stuck ("Resource busy").
+  DMG_SRC=$(mktemp -d)
+  cp -R "$BUNDLE/macos/FCA Stock Room.app" "$DMG_SRC/"
+  ln -s /Applications "$DMG_SRC/Applications"
+  mkdir -p "$BUNDLE/dmg"
+  hdiutil create -volname "FCA Stock Room" -srcfolder "$DMG_SRC" -ov -format UDZO "$BUNDLE/dmg/FCA Stock Room_${VERSION}_universal.dmg"
+  rm -rf "$DMG_SRC"
 fi
 
 gh release view "$TAG" -R $REPO > /dev/null || { echo "Release $TAG not found. Push the tag and wait for the Windows build first."; exit 1; }
