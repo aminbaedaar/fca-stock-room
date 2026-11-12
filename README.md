@@ -1,4 +1,4 @@
-# First Choice Organization APP (FCA Stock Room)
+# First Choice Africa Ltd (FCA Stock Room)
 
 Stock management for **First Choice Africa Limited**, Kigali. One codebase runs as:
 

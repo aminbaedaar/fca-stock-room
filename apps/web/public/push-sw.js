@@ -3,7 +3,7 @@ self.addEventListener('push', (event) => {
   let data = {};
   try { data = event.data ? event.data.json() : {}; } catch { data = { body: event.data && event.data.text() }; }
   event.waitUntil(
-    self.registration.showNotification(data.title || 'First Choice Organization APP', {
+    self.registration.showNotification(data.title || 'First Choice Africa Ltd', {
       body: data.body || 'New stock summary',
       icon: '/icon-192.png',
       badge: '/icon-192.png',

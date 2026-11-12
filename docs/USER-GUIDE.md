@@ -1,4 +1,4 @@
-# First Choice Organization APP — User guide
+# First Choice Africa Ltd — User guide
 
 For everyone at First Choice Africa Limited. Each section says who can do it.
 

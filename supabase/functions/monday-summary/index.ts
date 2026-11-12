@@ -39,7 +39,7 @@ function emailHtml(md: string, appUrl: string): string {
   return `<div style="font-family:Poppins,Arial,sans-serif;color:#1f1724;max-width:640px">
     <div style="height:4px;background:linear-gradient(90deg,#601E62,#9B165F,#D21359,#E7441F,#EE8115,#F4AF0D)"></div>
     <div style="padding:16px 0">${out.join('\n')}</div>
-    ${appUrl ? `<p><a href="${escapeHtml(appUrl)}" style="color:#9B165F">Open First Choice Organization APP</a></p>` : ''}
+    ${appUrl ? `<p><a href="${escapeHtml(appUrl)}" style="color:#9B165F">Open First Choice Africa Ltd</a></p>` : ''}
   </div>`;
 }
 
@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
 
   // Email (Resend). Optional: skipped if no key is set.
   const resendKey = Deno.env.get('RESEND_API_KEY');
-  const from = Deno.env.get('SUMMARY_FROM_EMAIL') ?? 'First Choice Organization <onboarding@resend.dev>';
+  const from = Deno.env.get('SUMMARY_FROM_EMAIL') ?? 'First Choice Africa Ltd <onboarding@resend.dev>';
   const to = (people ?? []).map((p) => p.email).filter(Boolean);
   if (resendKey && to.length && source === 'scheduled') {
     const r = await fetch('https://api.resend.com/emails', {

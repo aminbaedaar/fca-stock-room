@@ -67,7 +67,7 @@ export function Layout() {
             <img src="/logo-mark.png" alt="" />
             <span className="hide-sm">
               <b>{t('app.name')}</b>
-              <small>{t('app.company')}</small>
+              <small>Stock room &amp; job calculator</small>
             </span>
           </NavLink>
           <span className="spacer" />
