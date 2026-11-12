@@ -1,4 +1,4 @@
-import { buildMondayReport, kigaliDay, ROLE_LABELS, type Item, type Member, type Role } from '@fca/core';
+import { buildMondayReport, FCA_SQM_MATERIALS, kigaliDay, ROLE_LABELS, type Item, type Member, type Role } from '@fca/core';
 import seed from '../demo/seed.json';
 import { applyOp } from './engine';
 import type { Backend } from './backend';
@@ -30,13 +30,13 @@ function initial(): Snapshot {
     created_at: now,
     updated_at: now,
   })) as Item[];
-  return { items, moves: [], requests: [], reports: [], members: DEMO_MEMBERS };
+  return { items, moves: [], requests: [], reports: [], members: DEMO_MEMBERS, sqmMaterials: FCA_SQM_MATERIALS };
 }
 
 function read(): Snapshot {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) return { sqmMaterials: FCA_SQM_MATERIALS, ...JSON.parse(raw) };
   } catch {
     /* fall through */
   }

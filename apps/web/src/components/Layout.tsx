@@ -52,6 +52,7 @@ export function Layout() {
     ['/stock', t('nav.stock')],
     ['/movements', t('nav.movements')],
     ['/requests', t('nav.requests'), pendingRequests],
+    ['/calculator', t('nav.calculator')],
     ['/jobs', t('nav.jobs')],
     ['/team', t('nav.team')],
   ];

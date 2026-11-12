@@ -13,6 +13,7 @@ import { Jobs } from './pages/Jobs';
 import { Team } from './pages/Team';
 import { Import } from './pages/Import';
 import { PrintSheet } from './pages/PrintSheet';
+import { Calculator } from './pages/Calculator';
 
 /** Shows a desktop notification when a new Monday summary arrives. */
 function ReportWatcher() {
@@ -45,6 +46,7 @@ function Shell() {
           <Route path="stock" element={<Stock />} />
           <Route path="movements" element={<Movements />} />
           <Route path="requests" element={<Requests />} />
+          <Route path="calculator" element={<Calculator />} />
           <Route path="jobs" element={<Jobs />} />
           <Route path="team" element={<Team />} />
           <Route path="import" element={<Import />} />

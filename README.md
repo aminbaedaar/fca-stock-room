@@ -34,6 +34,7 @@ Open http://localhost:5173 and pick a demo role.
 | Installers | GitHub Actions builds `.dmg` and `.exe`/`.msi` on each version tag | `.github/workflows/desktop.yml` |
 | Website hosting | Vercel (free) | `vercel.json` |
 | Daily backup | GitHub Actions `pg_dump`, kept 30 days | `.github/workflows/backup.yml` |
+| Job calculator (SQM & wastage) | Carried over from the standalone SQM calculator, same results (tested) | `packages/core/src/sqm.ts`, `apps/web/src/pages/Calculator.tsx`, `supabase/migrations/0004_sqm.sql` |
 | Excel import / export | SheetJS | `apps/web/src/lib/excel.ts`, `packages/core/src/importer.ts` |
 
 ### Folder map

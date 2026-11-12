@@ -234,6 +234,13 @@ export function applyOp(s: Snapshot, op: Op, me: Member): Snapshot {
       return { ...s, members: s.members.map((m) => (m.user_id === op.user_id ? { ...m, role: op.role } : m)) };
     }
 
+    case 'saveSqmMaterials': {
+      require(me, 'items');
+      if (!op.materials.length) throw new OpError('The materials list cannot be empty.');
+      if (op.materials.some((m) => !m.name.trim())) throw new OpError('Every material needs a name.');
+      return { ...s, sqmMaterials: op.materials.map((m) => ({ ...m, name: clean(m.name, 80) })) };
+    }
+
     case 'import': {
       require(me, 'import');
       let next = s;

@@ -1,0 +1,13 @@
+[
+ {"bleedMode":"yes","materials":[{"id":"b","name":"Banner","kind":"roll","widths":"320, 250, 160","width":320,"length":0,"bleed":10},{"id":"s","name":"Sticker","kind":"roll","widths":"152,127,107","width":152,"length":0,"bleed":3}],
+  "locations":[{"id":"L1","name":"Shop front","items":[{"id":"a","name":"Fascia","mat":"b","w":600,"h":120,"qty":1},{"id":"c","name":"Side","mat":"b","w":200,"h":90,"qty":3},{"id":"d","name":"Door","mat":"s","w":80,"h":200,"qty":2},{"id":"e","name":"Window","mat":"s","w":45,"h":30,"qty":12}]},
+               {"id":"L2","name":"Branch","items":[{"id":"f","name":"Pull","mat":"s","w":100,"h":100,"qty":5}]}]},
+ {"bleedMode":"custom","bleedCm":2,"materials":[{"id":"s","name":"Sticker","kind":"roll","widths":"152,127,107","width":152,"length":0,"bleed":3}],
+  "locations":[{"id":"L1","name":"","items":[{"id":"a","name":"A","mat":"s","w":30,"h":40,"qty":40},{"id":"b","name":"B","mat":"s","w":118,"h":60,"qty":3}]}]},
+ {"bleedMode":"no","materials":[{"id":"f","name":"Foamboard","kind":"sheet","width":122,"length":244,"bleed":0}],
+  "locations":[{"id":"L1","name":"Event","items":[{"id":"a","name":"A1","mat":"f","w":59.4,"h":84.1,"qty":7},{"id":"b","name":"Big","mat":"f","w":100,"h":200,"qty":2},{"id":"c","name":"Small","mat":"f","w":30,"h":30,"qty":9}]}]},
+ {"bleedMode":"yes","materials":[{"id":"b","name":"Banner","kind":"roll","width":320,"length":0,"bleed":10,"overlap":3}],
+  "locations":[{"id":"L1","name":"Wall","items":[{"id":"a","name":"Huge","mat":"b","w":500,"h":400,"qty":1},{"id":"b","name":"x","mat":"b","w":"","h":10,"qty":1}]}]},
+ {"bleedMode":"no","materials":[{"id":"f","name":"Foamboard","kind":"sheet","width":122,"length":244,"bleed":0}],
+  "locations":[{"id":"L1","name":"Bad","items":[{"id":"a","name":"Too big","mat":"f","w":150,"h":300,"qty":1},{"id":"b","name":"No mat","mat":"zz","w":10,"h":10,"qty":1}]}]}
+]

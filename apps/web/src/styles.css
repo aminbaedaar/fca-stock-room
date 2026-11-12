@@ -294,3 +294,24 @@ td.actions { white-space: nowrap; text-align: right; }
   td, th { border: 1px solid #999 !important; padding: 4px 6px; }
   tr.group td { background: #eee !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+/* Job calculator */
+.sqm-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 980px) { .sqm-grid { grid-template-columns: 1fr; } }
+.sqm-loc { border: 1px solid var(--border); border-radius: 10px; padding: 12px; display: grid; gap: 8px; }
+.sqm-loc-name { font-weight: 600; flex: 1; }
+.sqm-items { display: grid; gap: 6px; }
+.sqm-row { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.8fr) minmax(0, .7fr) minmax(0, .7fr) minmax(0, .55fr) auto; gap: 6px; align-items: center; }
+.sqm-head { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
+@media (max-width: 720px) {
+  .sqm-row { grid-template-columns: 1fr 1fr 1fr; padding-bottom: 8px; border-bottom: 1px dashed var(--border); }
+  .sqm-row > :nth-child(1), .sqm-row > :nth-child(2) { grid-column: span 3; }
+}
+.sqm-tiles { grid-template-columns: repeat(2, 1fr); margin-bottom: 0; }
+.sqm-mat { border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin: 0; display: grid; gap: 8px; min-width: 0; }
+.sqm-take { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; display: grid; gap: 8px; }
+@media print {
+  .sqm-grid { display: block; }
+  .sqm-tiles { grid-template-columns: repeat(4, 1fr); }
+  .sqm-report .tile { border: 1px solid #999; box-shadow: none; }
+}

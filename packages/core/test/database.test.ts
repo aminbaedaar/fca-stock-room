@@ -48,7 +48,7 @@ let mesh: string;
 beforeAll(async () => {
   db = new PGlite();
   await db.exec(SHIM);
-  for (const f of ['0001_schema.sql', '0002_functions.sql', '0003_rls.sql']) await db.exec(migration(f));
+  for (const f of ['0001_schema.sql', '0002_functions.sql', '0003_rls.sql', '0004_sqm.sql']) await db.exec(migration(f));
   await db.exec('grant usage on schema public, auth to authenticated; grant select on all tables in schema public to authenticated;');
   for (const n of ['amin', 'stella', 'boss', 'mary', 'eric']) await signUp(n);
   await db.query(`update members set role = 'staff' where user_id = $1`, [users.stella]);
@@ -210,5 +210,19 @@ describe('items', () => {
     const [{ import_items: res }] = await as('amin', 'select import_items($1)', [JSON.stringify(payload)]);
     expect(res).toEqual({ added: 1, merged: 1 });
     expect(await qtyOf(glossy)).toBe(7); // existing qty untouched
+  });
+});
+
+describe('job calculator materials', () => {
+  it('everyone can read the starting list; only managers can save it', async () => {
+    const rows = await as('eric', 'select id, name, widths from sqm_materials order by sort');
+    expect(rows.length).toBe(27);
+    expect(rows[0]).toMatchObject({ name: 'Glossy Sticker', widths: '152, 127, 107' });
+    const list = JSON.stringify([{ id: 'm3', name: 'Glossy Sticker', kind: 'roll', widths: '127', width: 127, length: 0, bleed: 3, overlap: 2, links: { '127': glossy } }]);
+    await expect(as('stella', 'select save_sqm_materials($1)', [list])).rejects.toThrow(/not allowed/);
+    await expect(as('mary', `select save_sqm_materials('[]')`)).rejects.toThrow(/cannot be empty/);
+    await as('mary', 'select save_sqm_materials($1)', [list]);
+    const after = await as('eric', 'select id, widths, links from sqm_materials');
+    expect(after).toEqual([{ id: 'm3', widths: '127', links: { '127': glossy } }]);
   });
 });

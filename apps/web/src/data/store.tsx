@@ -54,7 +54,7 @@ const StoreContext = createContext<StoreValue | null>(null);
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [me, setMe] = useState<Member | null>(null);
   const [authReady, setAuthReady] = useState(false);
-  const [server, setServer] = useState<Snapshot>(() => (hasSupabase ? readJSON(CACHE_KEY, emptySnapshot()) : emptySnapshot()));
+  const [server, setServer] = useState<Snapshot>(() => (hasSupabase ? { ...emptySnapshot(), ...readJSON(CACHE_KEY, emptySnapshot()) } : emptySnapshot()));
   const [loaded, setLoaded] = useState(false);
   const [queue, setQueue] = useState<Op[]>(() => (hasSupabase ? readJSON<Op[]>(QUEUE_KEY, []) : []));
   const [online, setOnline] = useState(navigator.onLine);

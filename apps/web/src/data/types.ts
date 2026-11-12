@@ -1,4 +1,4 @@
-import type { Category, Count, Item, Member, Move, Report, Role, StockRequest, Unit } from '@fca/core';
+import type { Category, Count, Item, Member, Move, Report, Role, SqmMaterial, StockRequest, Unit } from '@fca/core';
 
 export interface Snapshot {
   items: Item[];
@@ -6,9 +6,10 @@ export interface Snapshot {
   requests: StockRequest[]; // newest first
   reports: Report[]; // newest first
   members: Member[];
+  sqmMaterials: SqmMaterial[]; // job calculator materials
 }
 
-export const emptySnapshot = (): Snapshot => ({ items: [], moves: [], requests: [], reports: [], members: [] });
+export const emptySnapshot = (): Snapshot => ({ items: [], moves: [], requests: [], reports: [], members: [], sqmMaterials: [] });
 
 export interface ItemFields {
   name: string;
@@ -35,7 +36,8 @@ export type Op =
   | { kind: 'request'; id: string; item_id: string; qty: number; client: string; job: string; note: string }
   | { kind: 'decide'; id: string; request_id: string; approve: boolean }
   | { kind: 'setRole'; id: string; user_id: string; role: Role }
-  | { kind: 'import'; id: string; rows: ImportRow[] };
+  | { kind: 'import'; id: string; rows: ImportRow[] }
+  | { kind: 'saveSqmMaterials'; id: string; materials: SqmMaterial[] };
 
 /** Ops that need the internet right away (not queued offline). */
 export const ONLINE_ONLY: Op['kind'][] = ['setRole', 'import'];

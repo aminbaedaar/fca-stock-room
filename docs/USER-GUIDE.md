@@ -114,6 +114,22 @@ This records the count for **every** item (this builds the history used for "use
 
 ---
 
+## Job calculator — everyone (Take from stock: Staff and up)
+
+The SQM & Wastage Calculator is now part of the Stock Room.
+
+1. **Job calculator** tab: fill in the job, client and whether to add bleed.
+2. Add each **location** and its **items**: name, material, width × height in cm, quantity.
+3. On the right you see real SQM, wastage SQM (and %), total SQM, running metres, and **Stock to pull**: how many metres of which roll width, or how many sheets, with how much is in stock.
+4. **Print job sheet** prints the results (or save as PDF from the print window).
+5. **Take from stock** records the stock-outs for you: check that each line uses the right stock item and quantity (metres are converted to rolls automatically), then **Record stock out**. Client and job are filled in, so they show on *Jobs & clients*.
+
+**Managers/Bosses/Admin:** *Add or edit materials* sets roll widths (list every width you stock, e.g. 152, 127, 107; the calculator picks the one with least wastage), sheet sizes, bleed, panel overlap, and which stock item each material is taken from ("Auto" matches by name and width).
+
+The job you are working on is kept on your device until you press **New job**.
+
+---
+
 ## Movements — everyone
 
 The full log: when, item, type, change, balance after, client · job · reason, and who.

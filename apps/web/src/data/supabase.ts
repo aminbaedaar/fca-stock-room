@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import type { Count, Item, Member, Move, Report, StockRequest } from '@fca/core';
+import { FCA_SQM_MATERIALS, type Count, type Item, type Member, type Move, type Report, type SqmMaterial, type StockRequest } from '@fca/core';
 import { ServerError, type Backend } from './backend';
 import type { Op, Snapshot } from './types';
 import { localAssistant } from './localAssistant';
@@ -103,13 +103,15 @@ export const supabaseBackend: Backend = {
 
   async load() {
     const since = new Date(Date.now() - 400 * 86_400_000).toISOString().slice(0, 10);
-    const [items, counts, moves, requests, reports, members] = await Promise.all([
+    const [items, counts, moves, requests, reports, members, sqm] = await Promise.all([
       all<Item>((a, b) => sb().from('items').select('*').order('sort').range(a, b)),
       all<Count & { item_id: string }>((a, b) => sb().from('counts').select('*').gte('date', since).order('date').range(a, b)),
       all<Move>((a, b) => sb().from('moves').select('*').order('at', { ascending: false }).range(a, b), 5000),
       all<StockRequest>((a, b) => sb().from('requests').select('*').order('created_at', { ascending: false }).range(a, b), 2000),
       all<Report>((a, b) => sb().from('reports').select('*').order('id', { ascending: false }).range(a, b), 52),
       all<Member>((a, b) => sb().from('members').select('*').order('name').range(a, b)),
+      // Until supabase/migrations/0004_sqm.sql is run, use the starting list.
+      all<SqmMaterial>((a, b) => sb().from('sqm_materials').select('*').order('sort').range(a, b)).catch(() => FCA_SQM_MATERIALS),
     ]);
     const byItem = new Map<string, Count[]>();
     for (const c of counts) {
@@ -123,6 +125,7 @@ export const supabaseBackend: Backend = {
       requests: requests.map((r) => ({ ...r, qty: num(r.qty) })),
       reports,
       members,
+      sqmMaterials: sqm.map((m) => ({ ...m, width: num(m.width), length: num(m.length), bleed: num(m.bleed), overlap: num(m.overlap) })),
     } satisfies Snapshot;
   },
 
@@ -159,6 +162,8 @@ export const supabaseBackend: Backend = {
         return rpc('set_role', { p_user: op.user_id, p_role: op.role });
       case 'import':
         return rpc('import_items', { p_items: op.rows });
+      case 'saveSqmMaterials':
+        return rpc('save_sqm_materials', { p_materials: op.materials });
     }
   },
 
