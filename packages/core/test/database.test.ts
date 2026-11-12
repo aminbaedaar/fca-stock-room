@@ -48,9 +48,9 @@ let mesh: string;
 beforeAll(async () => {
   db = new PGlite();
   await db.exec(SHIM);
-  for (const f of ['0001_schema.sql', '0002_functions.sql', '0003_rls.sql', '0004_sqm.sql']) await db.exec(migration(f));
+  for (const f of ['0001_schema.sql', '0002_functions.sql', '0003_rls.sql', '0004_sqm.sql', '0005_calculator_role.sql']) await db.exec(migration(f));
   await db.exec('grant usage on schema public, auth to authenticated; grant select on all tables in schema public to authenticated;');
-  for (const n of ['amin', 'stella', 'boss', 'mary', 'eric']) await signUp(n);
+  for (const n of ['amin', 'stella', 'boss', 'mary', 'eric', 'carl']) await signUp(n);
   await db.query(`update members set role = 'staff' where user_id = $1`, [users.stella]);
   await db.query(`update members set role = 'boss' where user_id = $1`, [users.boss]);
   await db.query(`update members set role = 'manager' where user_id = $1`, [users.mary]);
@@ -224,5 +224,23 @@ describe('job calculator materials', () => {
     await as('mary', 'select save_sqm_materials($1)', [list]);
     const after = await as('eric', 'select id, widths, links from sqm_materials');
     expect(after).toEqual([{ id: 'm3', widths: '127', links: { '127': glossy } }]);
+  });
+});
+
+describe('Calculator only role', () => {
+  it('the Admin can give it; the person sees only the calculator materials', async () => {
+    await as('amin', `select set_role($1, 'calculator')`, [users.carl]);
+    expect((await as('carl', 'select role from members where user_id = auth.uid()')).length).toBe(0); // cannot read the team
+    for (const t of ['items', 'counts', 'moves', 'requests', 'reports', 'stock_takes', 'members'])
+      expect(await as('carl', `select * from ${t}`), t).toEqual([]);
+    expect((await as('carl', 'select id from sqm_materials')).length).toBeGreaterThan(0);
+    // touch_member still returns their own record, so the app knows their role
+    const [me] = await as('carl', `select (touch_member('Carl', null)).role`);
+    expect(me.role).toBe('calculator');
+  });
+  it('cannot change stock, ask for material or edit materials', async () => {
+    await expect(as('carl', `select record_move($1, $2, 'out', 1, null, '', '', '', now())`, [randomUUID(), glossy])).rejects.toThrow(/not allowed/);
+    await expect(as('carl', `select create_request($1, $2, 1, '', '', '')`, [randomUUID(), glossy])).rejects.toThrow(/not allowed/);
+    await expect(as('carl', `select save_sqm_materials('[{"id":"x","name":"X","kind":"roll","widths":"100","width":100,"length":0,"bleed":0,"overlap":2}]')`)).rejects.toThrow(/not allowed/);
   });
 });

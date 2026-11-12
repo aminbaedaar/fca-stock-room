@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { can } from '@fca/core';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { StoreProvider, useStore } from './data/store';
 import { showNotification } from './lib/notify';
@@ -37,6 +38,16 @@ function Shell() {
   if (!me) return <Login />;
   if (resetting) return <Login reset />;
   if (!loaded) return <div className="login muted">{t('common.loading')}</div>;
+  // "Calculator only": the job calculator and nothing else.
+  if (!can(me.role, 'view'))
+    return (
+      <Routes>
+        <Route element={<Layout />}>
+          <Route path="calculator" element={<Calculator />} />
+          <Route path="*" element={<Navigate to="/calculator" replace />} />
+        </Route>
+      </Routes>
+    );
   return (
     <>
       <ReportWatcher />

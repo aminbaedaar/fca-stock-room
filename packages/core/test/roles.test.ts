@@ -4,12 +4,20 @@ import { can, PERMISSION_TABLE, type Permission } from '../src/roles.ts';
 import { ROLES } from '../src/types.ts';
 
 describe('permissions', () => {
-  it('everyone can view', () => {
-    for (const r of ROLES) expect(can(r, 'view')).toBe(true);
+  it('everyone except Calculator only can view stock', () => {
+    for (const r of ROLES) expect(can(r, 'view')).toBe(r !== 'calculator');
+  });
+
+  it('everyone can use the job calculator', () => {
+    for (const r of ROLES) expect(can(r, 'calculator')).toBe(true);
+  });
+
+  it('Calculator only can use the calculator and nothing else', () => {
+    for (const p of Object.keys(PERMISSION_TABLE) as Permission[]) expect(can('calculator', p)).toBe(p === 'calculator');
   });
 
   it('viewers cannot change anything', () => {
-    for (const p of Object.keys(PERMISSION_TABLE) as Permission[]) if (p !== 'view') expect(can('viewer', p)).toBe(false);
+    for (const p of Object.keys(PERMISSION_TABLE) as Permission[]) if (p !== 'view' && p !== 'calculator') expect(can('viewer', p)).toBe(false);
   });
 
   it('staff can request and do stock in/out, but not edit items, approve or void', () => {
@@ -33,7 +41,8 @@ describe('permissions', () => {
   });
 
   it('the database function fca_can uses the same table', () => {
-    const sql = readFileSync(new URL('../../../supabase/migrations/0002_functions.sql', import.meta.url), 'utf8');
+    // the newest migration that redefines fca_can
+    const sql = readFileSync(new URL('../../../supabase/migrations/0005_calculator_role.sql', import.meta.url), 'utf8');
     const block = /-- PERMISSIONS START([\s\S]*?)-- PERMISSIONS END/.exec(sql)?.[1] ?? '';
     for (const [perm, roles] of Object.entries(PERMISSION_TABLE)) {
       const m = new RegExp(`when '${perm}' then array\\[([^\\]]*)\\]`).exec(block);

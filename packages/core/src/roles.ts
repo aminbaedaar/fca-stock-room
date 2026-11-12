@@ -3,7 +3,8 @@ import type { Role } from './types.ts';
 // The permission table. The database enforces the same table in
 // supabase/migrations/0002_functions.sql (function fca_can); keep both in step.
 export type Permission =
-  | 'view'
+  | 'view' // see stock, movements, dashboard, team, AI assistant
+  | 'calculator' // use the job calculator
   | 'request'
   | 'stock' // stock in / stock out
   | 'adjust' // manual adjustments
@@ -18,6 +19,7 @@ export type Permission =
 
 const TABLE: Record<Permission, Role[]> = {
   view: ['admin', 'boss', 'manager', 'staff', 'viewer'],
+  calculator: ['admin', 'boss', 'manager', 'staff', 'viewer', 'calculator'],
   request: ['admin', 'boss', 'manager', 'staff'],
   stock: ['admin', 'boss', 'manager', 'staff'],
   adjust: ['admin', 'boss', 'manager'],
@@ -41,10 +43,22 @@ export const ROLE_LABELS: Record<Role, string> = {
   manager: 'Manager',
   staff: 'Staff',
   viewer: 'Viewer',
+  calculator: 'Calculator only',
+};
+
+/** What each role is for, shown when choosing a role. */
+export const ROLE_HELP: Record<Role, string> = {
+  admin: 'Everything, including roles, import and reversing movements',
+  boss: 'Runs the stock (same as Manager)',
+  manager: 'Runs the stock: items, approvals, stock take',
+  staff: 'Stock in and out, requests, job calculator',
+  viewer: 'Looks only: stock, movements, job calculator',
+  calculator: 'Only the job calculator: no stock, movements or team',
 };
 
 // Rows shown on the Team & roles screen.
 export const PERMISSION_ROWS: { label: string; perm: Permission }[] = [
+  { label: 'Use the job calculator (SQM & wastage, PDF report)', perm: 'calculator' },
   { label: 'See stock, movements, dashboard, AI assistant', perm: 'view' },
   { label: 'Request material for a job', perm: 'request' },
   { label: 'Stock in / stock out', perm: 'stock' },

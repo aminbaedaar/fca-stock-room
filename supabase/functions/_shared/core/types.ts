@@ -7,7 +7,7 @@ export type Category = (typeof CATEGORIES)[number];
 export const UNITS = ['Rolls', 'Sheets', 'Pcs', 'Boxes', 'Bags', 'Litres', 'Metres'] as const;
 export type Unit = (typeof UNITS)[number];
 
-export const ROLES = ['admin', 'boss', 'manager', 'staff', 'viewer'] as const;
+export const ROLES = ['admin', 'boss', 'manager', 'staff', 'viewer', 'calculator'] as const;
 export type Role = (typeof ROLES)[number];
 
 export type MoveType = 'in' | 'out' | 'adjust' | 'count' | 'created' | 'removed' | 'edit' | 'void';

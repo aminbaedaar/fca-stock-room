@@ -78,6 +78,7 @@ const okLines = (rows: ParsedLine[]) => rows.filter((r): r is OkLine => !('error
 export function Calculator() {
   const { data, me, dispatch } = useStore();
   const canEditMats = can(me?.role, 'items');
+  const seesStock = can(me?.role, 'view');
   const [job, setJob] = useState<JobState>(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(KEY) ?? 'null');
@@ -621,7 +622,7 @@ export function Calculator() {
               <div className="table-wrap">
                 <table className="cards">
                   <thead>
-                    <tr><th>Material</th><th className="num">Use</th><th>From stock</th><th className="num">In stock</th></tr>
+                    <tr><th>Material</th><th className="num">Use</th>{seesStock && <><th>From stock</th><th className="num">In stock</th></>}</tr>
                   </thead>
                   <tbody>
                     {lines.map((ln) => {
@@ -631,8 +632,12 @@ export function Calculator() {
                         <tr key={ln.key}>
                           <td className="first">{ln.label}</td>
                           <td className="num" data-label="Use">{ln.useTxt}{item && item.unit === 'Rolls' ? <div className="muted small">{fmtQty(ln.qty)} roll</div> : null}</td>
-                          <td data-label="From stock">{item ? itemLabel(item) : <span className="muted">not linked</span>}</td>
-                          <td className={`num ${short ? 'neg' : ''}`} data-label="In stock">{item ? `${fmtQty(item.qty)} ${item.unit}` : '–'}</td>
+                          {seesStock && (
+                            <>
+                              <td data-label="From stock">{item ? itemLabel(item) : <span className="muted">not linked</span>}</td>
+                              <td className={`num ${short ? 'neg' : ''}`} data-label="In stock">{item ? `${fmtQty(item.qty)} ${item.unit}` : '–'}</td>
+                            </>
+                          )}
                         </tr>
                       );
                     })}

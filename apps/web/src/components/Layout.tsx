@@ -47,7 +47,8 @@ export function Layout() {
 
   if (!me) return null;
 
-  const links: [string, string, number?][] = [
+  const seesStock = can(me.role, 'view');
+  const links: [string, string, number?][] = !seesStock ? [['/calculator', t('nav.calculator')]] : [
     ['/', t('nav.dashboard')],
     ['/stock', t('nav.stock')],
     ['/movements', t('nav.movements')],
@@ -62,7 +63,7 @@ export function Layout() {
       <div className="brandbar" />
       <header className="header">
         <div className="header-inner">
-          <NavLink to="/" className="logo" aria-label={t('app.name')}>
+          <NavLink to={seesStock ? '/' : '/calculator'} className="logo" aria-label={t('app.name')}>
             <img src="/logo-mark.png" alt="" />
             <span className="hide-sm">
               <b>{t('app.name')}</b>
@@ -70,9 +71,11 @@ export function Layout() {
             </span>
           </NavLink>
           <span className="spacer" />
-          <button className="btn brand" onClick={() => setAi(true)}>
-            ✨ <span>{t('nav.askAi')}</span>
-          </button>
+          {seesStock && (
+            <button className="btn brand" onClick={() => setAi(true)}>
+              ✨ <span>{t('nav.askAi')}</span>
+            </button>
+          )}
           <button
             className="user"
             aria-haspopup="menu"
@@ -99,7 +102,7 @@ export function Layout() {
               <button role="menuitem" onClick={() => setTheme(theme === 'dark' ? 'light' : theme === 'light' ? 'system' : 'dark')}>
                 Theme: {theme === 'system' ? 'Automatic' : theme === 'dark' ? 'Dark' : 'Light'}
               </button>
-              <button
+              {seesStock && <button
                 role="menuitem"
                 onClick={async () => {
                   const r = await enablePush().catch(() => 'unsupported' as const);
@@ -108,10 +111,12 @@ export function Layout() {
                 }}
               >
                 Turn on notifications
-              </button>
-              <button role="menuitem" onClick={() => (setMenu(false), navigate('/print'))}>
-                {t('stock.printSheet')}
-              </button>
+              </button>}
+              {seesStock && (
+                <button role="menuitem" onClick={() => (setMenu(false), navigate('/print'))}>
+                  {t('stock.printSheet')}
+                </button>
+              )}
               {can(me.role, 'import') && (
                 <button role="menuitem" onClick={() => (setMenu(false), navigate('/import'))}>
                   {t('team.import')}

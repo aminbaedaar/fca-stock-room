@@ -2,7 +2,7 @@
 
 For everyone at First Choice Africa Limited. Each section says who can do it.
 
-**Roles:** **Admin** (one person, can do everything) · **Boss** and **Manager** (run the stock) · **Staff** (record stock in and out, ask for material) · **Viewer** (look only).
+**Roles:** **Admin** (one person, can do everything) · **Boss** and **Manager** (run the stock) · **Staff** (record stock in and out, ask for material) · **Viewer** (look only) · **Calculator only** (just the Job calculator: no stock, movements or team).
 
 ---
 
@@ -154,7 +154,7 @@ How much material each client (or each job) used, from stock outs and approved r
 ## Team & roles — everyone can see; Admin changes
 
 - Everyone who has signed in, with their role and when they were last seen.
-- **Admin:** change anyone's role with the drop-down. There must always be at least one Admin.
+- **Admin:** change anyone's role with the drop-down. There must always be at least one Admin. Choose **Calculator only** for people who should use the Job calculator and nothing else.
 - The table shows exactly who can do what. These rules are enforced by the database, so they can't be bypassed.
 - **Admin:** **Import from Excel** (add items and count history from a spreadsheet, with a preview before saving) and **Download full backup** (everything in one Excel file).
 

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { can, fmtDateTime, PERMISSION_ROWS, ROLE_LABELS, ROLES, type Role } from '@fca/core';
+import { can, fmtDateTime, PERMISSION_ROWS, ROLE_HELP, ROLE_LABELS, ROLES, type Role } from '@fca/core';
 import { newId, useStore } from '../data/store';
 import { exportBackup } from '../lib/exports';
 import { t } from '../i18n';
@@ -41,7 +41,7 @@ export function Team() {
                 </div>
                 {isAdmin ? (
                   <select value={m.role} onChange={(e) => setRole(m.user_id, e.target.value as Role)} style={{ width: 'auto' }} aria-label={`Role for ${m.name}`}>
-                    {ROLES.map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
+                    {ROLES.map((r) => <option key={r} value={r} title={ROLE_HELP[r]}>{ROLE_LABELS[r]}</option>)}
                   </select>
                 ) : (
                   <span className="pill rejected">{ROLE_LABELS[m.role]}</span>
@@ -76,6 +76,13 @@ export function Team() {
               </tbody>
             </table>
           </div>
+          <ul className="small" style={{ margin: 0, paddingLeft: 18 }}>
+            {ROLES.map((r) => (
+              <li key={r}>
+                <b>{ROLE_LABELS[r]}</b>: {ROLE_HELP[r]}
+              </li>
+            ))}
+          </ul>
           <p className="muted small">These rules are enforced by the database itself, not just by hiding buttons.</p>
         </section>
       </div>

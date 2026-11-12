@@ -61,7 +61,7 @@ export function Login({ reset = false }: { reset?: boolean }) {
         {demo ? (
           <>
             <p className="muted" style={{ textAlign: 'center', margin: 0 }}>{t('auth.demoAs')}</p>
-            {(['admin', 'boss', 'manager', 'staff', 'viewer'] as Role[]).map((r) => (
+            {(['admin', 'boss', 'manager', 'staff', 'viewer', 'calculator'] as Role[]).map((r) => (
               <button key={r} className={`btn${r === 'admin' ? ' primary' : ''}`} onClick={() => run(() => backend.demoSignIn!(r))}>
                 {ROLE_LABELS[r]}
               </button>
