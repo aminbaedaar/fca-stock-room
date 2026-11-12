@@ -24,7 +24,7 @@ function ReportWatcher() {
   useEffect(() => {
     if (!loaded) return;
     if (seen.current && latest && latest.id !== seen.current && latest.source === 'scheduled') {
-      showNotification('Monday stock summary', 'The weekly summary is ready. Open FCA Stock Room to read it.');
+      showNotification('Monday stock summary', 'The weekly summary is ready. Open First Choice Organization APP to read it.');
     }
     seen.current = latest?.id ?? '';
   }, [latest?.id, loaded]); // eslint-disable-line react-hooks/exhaustive-deps

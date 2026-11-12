@@ -18,8 +18,8 @@ export type Permission =
   | 'backup';
 
 const TABLE: Record<Permission, Role[]> = {
-  view: ['admin', 'boss', 'manager', 'staff', 'viewer'],
-  calculator: ['admin', 'boss', 'manager', 'staff', 'viewer', 'calculator'],
+  view: ['admin', 'boss', 'manager', 'staff'],
+  calculator: ['admin', 'boss', 'manager', 'staff', 'viewer'],
   request: ['admin', 'boss', 'manager', 'staff'],
   stock: ['admin', 'boss', 'manager', 'staff'],
   adjust: ['admin', 'boss', 'manager'],
@@ -43,7 +43,6 @@ export const ROLE_LABELS: Record<Role, string> = {
   manager: 'Manager',
   staff: 'Staff',
   viewer: 'Viewer',
-  calculator: 'Calculator only',
 };
 
 /** What each role is for, shown when choosing a role. */
@@ -52,8 +51,7 @@ export const ROLE_HELP: Record<Role, string> = {
   boss: 'Runs the stock (same as Manager)',
   manager: 'Runs the stock: items, approvals, stock take',
   staff: 'Stock in and out, requests, job calculator',
-  viewer: 'Looks only: stock, movements, job calculator',
-  calculator: 'Only the job calculator: no stock, movements or team',
+  viewer: 'Only the job calculator: no stock, movements or team',
 };
 
 // Rows shown on the Team & roles screen.

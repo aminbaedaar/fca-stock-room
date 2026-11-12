@@ -3,7 +3,7 @@ self.addEventListener('push', (event) => {
   let data = {};
   try { data = event.data ? event.data.json() : {}; } catch { data = { body: event.data && event.data.text() }; }
   event.waitUntil(
-    self.registration.showNotification(data.title || 'FCA Stock Room', {
+    self.registration.showNotification(data.title || 'First Choice Organization APP', {
       body: data.body || 'New stock summary',
       icon: '/icon-192.png',
       badge: '/icon-192.png',

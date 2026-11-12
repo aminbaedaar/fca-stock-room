@@ -48,7 +48,7 @@ let mesh: string;
 beforeAll(async () => {
   db = new PGlite();
   await db.exec(SHIM);
-  for (const f of ['0001_schema.sql', '0002_functions.sql', '0003_rls.sql', '0004_sqm.sql', '0005_calculator_role.sql']) await db.exec(migration(f));
+  for (const f of ['0001_schema.sql', '0002_functions.sql', '0003_rls.sql', '0004_sqm.sql', '0005_calculator_role.sql', '0006_viewer_calculator_only.sql']) await db.exec(migration(f));
   await db.exec('grant usage on schema public, auth to authenticated; grant select on all tables in schema public to authenticated;');
   for (const n of ['amin', 'stella', 'boss', 'mary', 'eric', 'carl']) await signUp(n);
   await db.query(`update members set role = 'staff' where user_id = $1`, [users.stella]);
@@ -76,7 +76,7 @@ describe('sign up and roles', () => {
 
 describe('row-level security', () => {
   it('signed-in users can read but not write tables directly', async () => {
-    expect((await as('eric', 'select count(*)::int as n from items'))[0].n).toBe(2);
+    expect((await as('eric', 'select count(*)::int as n from items'))[0].n).toBe(0); // viewers: calculator only
     await expect(as('amin', `update items set qty = 999`)).rejects.toThrow(/permission denied/);
     await expect(as('amin', `delete from moves`)).rejects.toThrow(/permission denied/);
     await expect(as('amin', `insert into moves (id, type) values (gen_random_uuid(), 'in')`)).rejects.toThrow(/permission denied/);
@@ -227,16 +227,16 @@ describe('job calculator materials', () => {
   });
 });
 
-describe('Calculator only role', () => {
-  it('the Admin can give it; the person sees only the calculator materials', async () => {
-    await as('amin', `select set_role($1, 'calculator')`, [users.carl]);
+describe('Viewer: job calculator only', () => {
+  it('a Viewer sees only the calculator materials', async () => {
+    await as('amin', `select set_role($1, 'viewer')`, [users.carl]);
     expect((await as('carl', 'select role from members where user_id = auth.uid()')).length).toBe(0); // cannot read the team
     for (const t of ['items', 'counts', 'moves', 'requests', 'reports', 'stock_takes', 'members'])
       expect(await as('carl', `select * from ${t}`), t).toEqual([]);
     expect((await as('carl', 'select id from sqm_materials')).length).toBeGreaterThan(0);
     // touch_member still returns their own record, so the app knows their role
     const [me] = await as('carl', `select (touch_member('Carl', null)).role`);
-    expect(me.role).toBe('calculator');
+    expect(me.role).toBe('viewer');
   });
   it('cannot change stock, ask for material or edit materials', async () => {
     await expect(as('carl', `select record_move($1, $2, 'out', 1, null, '', '', '', now())`, [randomUUID(), glossy])).rejects.toThrow(/not allowed/);

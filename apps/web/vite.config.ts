@@ -13,8 +13,8 @@ export default defineConfig({
       disable: isTauri,
       includeAssets: ['logo-mark.png', 'logo-full.png'],
       manifest: {
-        name: 'FCA Stock Room',
-        short_name: 'Stock Room',
+        name: 'First Choice Organization APP',
+        short_name: 'First Choice',
         description: 'Stock management for First Choice Africa Limited',
         theme_color: '#601E62',
         background_color: '#ffffff',

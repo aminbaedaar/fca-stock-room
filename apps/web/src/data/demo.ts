@@ -12,7 +12,7 @@ import { localAssistant } from './localAssistant';
 const KEY = 'fca.demo.v1';
 const USER_KEY = 'fca.demo.user';
 
-const DEMO_MEMBERS: Member[] = (['admin', 'boss', 'manager', 'staff', 'viewer', 'calculator'] as Role[]).map((role) => ({
+const DEMO_MEMBERS: Member[] = (['admin', 'boss', 'manager', 'staff', 'viewer'] as Role[]).map((role) => ({
   user_id: `demo-${role}`,
   name: `Demo ${ROLE_LABELS[role]}`,
   email: `${role}@demo.fca`,
