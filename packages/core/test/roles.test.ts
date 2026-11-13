@@ -16,7 +16,7 @@ describe('permissions', () => {
     for (const p of Object.keys(PERMISSION_TABLE) as Permission[]) expect(can('viewer', p)).toBe(p === 'calculator');
   });
 
-  it('staff can request and do stock in/out, but not edit items, approve or void', () => {
+  it('staff can request and do stock in/out, but not edit items, approve or reverse', () => {
     expect(can('staff', 'request')).toBe(true);
     expect(can('staff', 'stock')).toBe(true);
     for (const p of ['adjust', 'items', 'approve', 'stocktake', 'summary', 'void', 'roles'] as Permission[])
@@ -27,8 +27,12 @@ describe('permissions', () => {
     for (const p of Object.keys(PERMISSION_TABLE) as Permission[]) expect(can('boss', p)).toBe(can('manager', p));
   });
 
-  it('only admin can void, set roles, import and back up', () => {
-    for (const p of ['void', 'roles', 'import', 'backup'] as Permission[])
+  it('managers and bosses can reverse movements', () => {
+    for (const r of ROLES) expect(can(r, 'void')).toBe(['admin', 'boss', 'manager'].includes(r));
+  });
+
+  it('only admin can see the team, set roles, import and back up', () => {
+    for (const p of ['roles', 'import', 'backup'] as Permission[])
       for (const r of ROLES) expect(can(r, p)).toBe(r === 'admin');
   });
 
@@ -38,7 +42,7 @@ describe('permissions', () => {
 
   it('the database function fca_can uses the same table', () => {
     // the newest migration that redefines fca_can
-    const sql = readFileSync(new URL('../../../supabase/migrations/0006_viewer_calculator_only.sql', import.meta.url), 'utf8');
+    const sql = readFileSync(new URL('../../../supabase/migrations/0007_team_and_reverse.sql', import.meta.url), 'utf8');
     const block = /-- PERMISSIONS START([\s\S]*?)-- PERMISSIONS END/.exec(sql)?.[1] ?? '';
     for (const [perm, roles] of Object.entries(PERMISSION_TABLE)) {
       const m = new RegExp(`when '${perm}' then array\\[([^\\]]*)\\]`).exec(block);

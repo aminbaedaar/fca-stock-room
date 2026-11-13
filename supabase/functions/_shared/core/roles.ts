@@ -28,7 +28,7 @@ const TABLE: Record<Permission, Role[]> = {
   stocktake: ['admin', 'boss', 'manager'],
   summary: ['admin', 'boss', 'manager'],
   import: ['admin'],
-  void: ['admin'],
+  void: ['admin', 'boss', 'manager'],
   roles: ['admin'],
   backup: ['admin'],
 };
@@ -63,7 +63,8 @@ export const PERMISSION_ROWS: { label: string; perm: Permission }[] = [
   { label: 'Adjust stock, add / edit / remove items', perm: 'items' },
   { label: 'Approve or reject requests, weekly stock take', perm: 'approve' },
   { label: 'Write the Monday summary now', perm: 'summary' },
-  { label: 'Reverse (void) a movement, set roles, import, backup', perm: 'void' },
+  { label: 'Reverse a movement (a reason is required)', perm: 'void' },
+  { label: 'See the team, set roles, import, backup', perm: 'roles' },
 ];
 
 export const PERMISSION_TABLE = TABLE;

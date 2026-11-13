@@ -48,7 +48,7 @@ let mesh: string;
 beforeAll(async () => {
   db = new PGlite();
   await db.exec(SHIM);
-  for (const f of ['0001_schema.sql', '0002_functions.sql', '0003_rls.sql', '0004_sqm.sql', '0005_calculator_role.sql', '0006_viewer_calculator_only.sql']) await db.exec(migration(f));
+  for (const f of ['0001_schema.sql', '0002_functions.sql', '0003_rls.sql', '0004_sqm.sql', '0005_calculator_role.sql', '0006_viewer_calculator_only.sql', '0007_team_and_reverse.sql']) await db.exec(migration(f));
   await db.exec('grant usage on schema public, auth to authenticated; grant select on all tables in schema public to authenticated;');
   for (const n of ['amin', 'stella', 'boss', 'mary', 'eric', 'carl']) await signUp(n);
   await db.query(`update members set role = 'staff' where user_id = $1`, [users.stella]);
@@ -127,17 +127,21 @@ describe('stock in / out', () => {
 });
 
 describe('void', () => {
-  it('only Admin can void; stock is reversed and the original kept', async () => {
+  it('Managers can reverse with a reason; Staff cannot; stock is reversed and the original kept', async () => {
     const id = randomUUID();
     await as('stella', `select record_move($1, $2, 'out', 2, null, 'Bank', 'Banner')`, [id, glossy]);
     expect(await qtyOf(glossy)).toBe(8.5);
-    await expect(as('mary', `select void_move($1, $2)`, [randomUUID(), id])).rejects.toThrow(/not allowed/);
-    await as('amin', `select void_move($1, $2)`, [randomUUID(), id]);
+    await expect(as('stella', `select void_move($1, $2, 'typo')`, [randomUUID(), id])).rejects.toThrow(/not allowed/);
+    await expect(as('mary', `select void_move($1, $2, '  ')`, [randomUUID(), id])).rejects.toThrow(/reason/);
+    const rid = randomUUID();
+    await as('mary', `select void_move($1, $2, 'Wrong item chosen')`, [rid, id]);
     expect(await qtyOf(glossy)).toBe(10.5);
     const orig = (await db.query<any>('select voided, voided_by from moves where id = $1', [id])).rows[0];
     expect(orig.voided).toBe(true);
-    expect(orig.voided_by).toBe(users.amin);
-    await expect(as('amin', `select void_move($1, $2)`, [randomUUID(), id])).rejects.toThrow(/already reversed/);
+    expect(orig.voided_by).toBe(users.mary);
+    const rev = (await db.query<any>('select note, user_name from moves where id = $1', [rid])).rows[0];
+    expect(rev.note).toMatch(/Reason: Wrong item chosen$/);
+    await expect(as('amin', `select void_move($1, $2, 'again')`, [randomUUID(), id])).rejects.toThrow(/already reversed/);
   });
 });
 
@@ -230,8 +234,8 @@ describe('job calculator materials', () => {
 describe('Viewer: job calculator only', () => {
   it('a Viewer sees only the calculator materials', async () => {
     await as('amin', `select set_role($1, 'viewer')`, [users.carl]);
-    expect((await as('carl', 'select role from members where user_id = auth.uid()')).length).toBe(0); // cannot read the team
-    for (const t of ['items', 'counts', 'moves', 'requests', 'reports', 'stock_takes', 'members'])
+    expect((await as('carl', 'select user_id from members')).length).toBe(1); // only their own row, not the team
+    for (const t of ['items', 'counts', 'moves', 'requests', 'reports', 'stock_takes'])
       expect(await as('carl', `select * from ${t}`), t).toEqual([]);
     expect((await as('carl', 'select id from sqm_materials')).length).toBeGreaterThan(0);
     // touch_member still returns their own record, so the app knows their role
@@ -242,5 +246,15 @@ describe('Viewer: job calculator only', () => {
     await expect(as('carl', `select record_move($1, $2, 'out', 1, null, '', '', '', now())`, [randomUUID(), glossy])).rejects.toThrow(/not allowed/);
     await expect(as('carl', `select create_request($1, $2, 1, '', '', '')`, [randomUUID(), glossy])).rejects.toThrow(/not allowed/);
     await expect(as('carl', `select save_sqm_materials('[{"id":"x","name":"X","kind":"roll","widths":"100","width":100,"length":0,"bleed":0,"overlap":2}]')`)).rejects.toThrow(/not allowed/);
+  });
+});
+
+describe('team list: Admin only', () => {
+  it('the Admin sees everyone; others see only themselves', async () => {
+    expect((await as('amin', 'select user_id from members')).length).toBeGreaterThan(3);
+    for (const n of ['mary', 'boss', 'stella']) {
+      const rows = await as<{ user_id: string }>(n, 'select user_id from members');
+      expect(rows.map((r) => r.user_id), n).toEqual([users[n]]);
+    }
   });
 });

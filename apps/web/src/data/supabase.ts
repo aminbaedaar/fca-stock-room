@@ -153,7 +153,7 @@ export const supabaseBackend: Backend = {
       case 'removeItem':
         return rpc('remove_item', { p_id: op.id, p_item: op.item_id, p_reason: op.reason });
       case 'void':
-        return rpc('void_move', { p_id: op.id, p_move: op.move_id });
+        return rpc('void_move', { p_id: op.id, p_move: op.move_id, p_reason: op.reason });
       case 'request':
         return rpc('create_request', { p_id: op.id, p_item: op.item_id, p_qty: op.qty, p_client: op.client, p_job: op.job, p_note: op.note });
       case 'decide':

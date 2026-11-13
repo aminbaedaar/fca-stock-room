@@ -55,7 +55,7 @@ export function Layout() {
     ['/requests', t('nav.requests'), pendingRequests],
     ['/calculator', t('nav.calculator')],
     ['/jobs', t('nav.jobs')],
-    ['/team', t('nav.team')],
+    ...(can(me.role, 'roles') ? [['/team', t('nav.team')] as [string, string]] : []),
   ];
 
   return (

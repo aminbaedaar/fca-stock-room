@@ -50,7 +50,7 @@ Your name, photo and role are shown at the top right. Click them for: theme (lig
 5. Fill in **Client** and **Job** for stock outs, so the *Jobs & clients* page and the Monday summary are accurate.
 6. **Save.** You can't take out more than is in stock.
 
-Every movement is saved with your name and the time, and can never be deleted. Mistakes are reversed by the Admin (see Movements).
+Every movement is saved with your name and the time, and can never be deleted. Mistakes are reversed by a Manager, Boss or the Admin (see Movements).
 
 ---
 
@@ -141,7 +141,7 @@ The full log: when, item, type, change, balance after, client · job · reason, 
 
 - Filter by search text, type, person and period (7 / 30 / 90 days / all).
 - **Export to Excel.**
-- **Admin only — Reverse:** puts the stock back and crosses the line out. The line stays in the log forever, with a new *Reversed* line showing who reversed it.
+- **Managers, Bosses and Admin — Reverse:** press **Reverse**, write the reason (required, e.g. "entered twice"), then **Reverse**. The stock goes back and the line is crossed out. It stays in the log forever, with a new *Reversed* line showing who reversed it and why.
 
 ---
 
@@ -151,9 +151,9 @@ How much material each client (or each job) used, from stock outs and approved r
 
 ---
 
-## Team & roles — everyone can see; Admin changes
+## Team & roles — Admin only
 
-- Everyone who has signed in, with their role and when they were last seen.
+- Only the Admin sees the **Team** tab: everyone who has signed in, with their role and when they were last seen. Other people cannot see the team list.
 - **Admin:** change anyone's role with the drop-down. There must always be at least one Admin. Choose **Viewer** for people who should use the Job calculator and nothing else.
 - The table shows exactly who can do what. These rules are enforced by the database, so they can't be bypassed.
 - **Admin:** **Import from Excel** (add items and count history from a spreadsheet, with a preview before saving) and **Download full backup** (everything in one Excel file).
@@ -169,4 +169,4 @@ Click your name → **Turn on notifications** on each device where you want the 
 - Log every stock out **when it happens**, with client and job.
 - Do the stock take weekly.
 - Keep minimum levels up to date.
-- If a number looks wrong, tell a Manager. Don't delete or re-enter; ask the Admin to reverse the wrong movement.
+- If a number looks wrong, tell a Manager. Don't delete or re-enter; ask a Manager to reverse the wrong movement.

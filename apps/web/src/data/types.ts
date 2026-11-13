@@ -32,7 +32,7 @@ export type Op =
   | { kind: 'stocktake'; id: string; date: string; counts: { item_id: string; qty: number }[] }
   | { kind: 'saveItem'; id: string; item_id: string | null; fields: ItemFields; qty: number }
   | { kind: 'removeItem'; id: string; item_id: string; reason: string }
-  | { kind: 'void'; id: string; move_id: string }
+  | { kind: 'void'; id: string; move_id: string; reason: string }
   | { kind: 'request'; id: string; item_id: string; qty: number; client: string; job: string; note: string }
   | { kind: 'decide'; id: string; request_id: string; approve: boolean }
   | { kind: 'setRole'; id: string; user_id: string; role: Role }

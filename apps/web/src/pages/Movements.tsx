@@ -4,7 +4,7 @@ import { can, fmtDateTime, fmtQty, type MoveType } from '@fca/core';
 import { newId, useStore } from '../data/store';
 import { exportMoves } from '../lib/exports';
 import { t } from '../i18n';
-import { Empty, MoveTypeLabel } from '../components/ui';
+import { Empty, Field, Modal, MoveTypeLabel } from '../components/ui';
 
 const TYPES: MoveType[] = ['in', 'out', 'adjust', 'count', 'created', 'edit', 'removed', 'void'];
 const PAGE = 200;
@@ -32,9 +32,17 @@ export function Movements() {
     );
   }, [data.moves, query, type, person, period]);
 
-  const voidMove = (id: string) => {
-    if (!confirm(t('moves.confirmVoid'))) return;
-    if (dispatch({ kind: 'void', id: newId(), move_id: id })) toast('Movement reversed');
+  // Reversing needs a reason, saved on the "Reversed" line in the log.
+  const [reversing, setReversing] = useState<string | null>(null);
+  const [reason, setReason] = useState('');
+  const reversingMove = data.moves.find((m) => m.id === reversing);
+  const voidMove = () => {
+    if (!reversing || reason.trim().length < 3) return;
+    if (dispatch({ kind: 'void', id: newId(), move_id: reversing, reason: reason.trim() })) {
+      toast('Movement reversed');
+      setReversing(null);
+      setReason('');
+    }
   };
   const canVoid = can(me?.role, 'void');
 
@@ -97,7 +105,7 @@ export function Movements() {
                     {canVoid && (
                       <td className="actions">
                         {!m.voided && ['in', 'out', 'adjust', 'count'].includes(m.type) && (
-                          <button className="btn small danger" onClick={() => voidMove(m.id)}>{t('moves.void')}</button>
+                          <button className="btn small danger" onClick={() => (setReversing(m.id), setReason(''))}>{t('moves.void')}</button>
                         )}
                       </td>
                     )}
@@ -113,6 +121,34 @@ export function Movements() {
           </div>
         )}
       </div>
+      {reversingMove && (
+        <Modal
+          title="Reverse movement"
+          onClose={() => setReversing(null)}
+          footer={
+            <>
+              <button className="btn" onClick={() => setReversing(null)}>{t('common.cancel')}</button>
+              <button className="btn danger" onClick={voidMove} disabled={reason.trim().length < 3}>{t('moves.void')}</button>
+            </>
+          }
+        >
+          <p style={{ marginTop: 0 }}>
+            <b>{reversingMove.item_name}</b>: {reversingMove.delta > 0 ? '+' : ''}
+            {fmtQty(reversingMove.delta)} {reversingMove.unit} · {fmtDateTime(reversingMove.at)} · {reversingMove.user_name}
+          </p>
+          <p className="muted small">{t('moves.confirmVoid')}</p>
+          <Field label="Reason for reversing (required)" full>
+            <textarea
+              rows={3}
+              value={reason}
+              autoFocus
+              maxLength={300}
+              placeholder="e.g. Wrong item chosen, entered twice, wrong quantity"
+              onChange={(e) => setReason(e.target.value)}
+            />
+          </Field>
+        </Modal>
+      )}
     </>
   );
 }

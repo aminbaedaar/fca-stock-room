@@ -149,6 +149,8 @@ export function applyOp(s: Snapshot, op: Op, me: Member): Snapshot {
     case 'void': {
       require(me, 'void');
       if (s.moves.some((m) => m.id === op.id)) return s;
+      const reason = clean(op.reason, 300);
+      if (reason.length < 3) throw new OpError('Write the reason for reversing this movement.');
       const orig = s.moves.find((m) => m.id === op.move_id);
       if (!orig) throw new OpError('Movement not found.');
       if (orig.voided) throw new OpError('This movement is already reversed.');
@@ -168,7 +170,7 @@ export function applyOp(s: Snapshot, op: Op, me: Member): Snapshot {
         balance: updated.qty,
         client: orig.client,
         job: orig.job,
-        note: `Reversed ${orig.type} of ${fmtDate(orig.at)}`,
+        note: `Reversed ${orig.type} of ${fmtDate(orig.at)}. Reason: ${reason}`,
       });
       const moves = s.moves.map((m) => (m.id === orig.id ? { ...m, voided: true, voided_by: me.user_id, voided_at: now } : m));
       return { ...setItem(s, updated), moves: [move, ...moves] };
