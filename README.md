@@ -68,7 +68,7 @@ docs/                setup guide and user guide
 
 *Viewers* see just the Job calculator tab; the database does not let them read stock, movements, requests, reports or the team list (`supabase/migrations/0006_viewer_calculator_only.sql`). Only the Admin can see the team list; everyone else can read just their own record (`0007_team_and_reverse.sql`).
 
-The first person to sign up becomes Admin; everyone after starts as Staff. Rules are enforced **in the database** (`fca_can` in `supabase/migrations/0002_functions.sql`): tables are read-only to the API and every change goes through a function that checks the role first. `packages/core/src/roles.ts` holds the same table for the screens, and a test checks the two match.
+The first person to sign up becomes Admin; everyone after starts as Viewer (job calculator only). Rules are enforced **in the database** (`fca_can` in `supabase/migrations/0002_functions.sql`): tables are read-only to the API and every change goes through a function that checks the role first. `packages/core/src/roles.ts` holds the same table for the screens, and a test checks the two match.
 
 ## Calculations
 

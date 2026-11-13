@@ -10,7 +10,7 @@ For everyone at First Choice Africa Limited. Each section says who can do it.
 
 - **Website:** open the address your Admin gives you. On a phone you can add it to the home screen (iPhone: Share → *Add to Home Screen*; Android: menu → *Install app*).
 - **Desktop app:** open **FCA Stock Room** from Applications (Mac) or the Start menu (Windows).
-- First time: **Create account** with your name, email and a password (at least 8 characters). You start as **Staff** until the Admin changes your role.
+- First time: **Create account** with your name, email and a password (at least 8 characters). You start as **Viewer** (only the job calculator) until the Admin changes your role on the Team page.
 - Forgot your password: **Forgot password?** → enter your email → click the link in the email.
 
 Your name, photo and role are shown at the top right. Click them for: theme (light/dark), **Turn on notifications**, the printable stock-take sheet, and **Sign out**.

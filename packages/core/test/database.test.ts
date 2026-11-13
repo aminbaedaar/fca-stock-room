@@ -48,7 +48,7 @@ let mesh: string;
 beforeAll(async () => {
   db = new PGlite();
   await db.exec(SHIM);
-  for (const f of ['0001_schema.sql', '0002_functions.sql', '0003_rls.sql', '0004_sqm.sql', '0005_calculator_role.sql', '0006_viewer_calculator_only.sql', '0007_team_and_reverse.sql']) await db.exec(migration(f));
+  for (const f of ['0001_schema.sql', '0002_functions.sql', '0003_rls.sql', '0004_sqm.sql', '0005_calculator_role.sql', '0006_viewer_calculator_only.sql', '0007_team_and_reverse.sql', '0008_new_users_viewer.sql']) await db.exec(migration(f));
   await db.exec('grant usage on schema public, auth to authenticated; grant select on all tables in schema public to authenticated;');
   for (const n of ['amin', 'stella', 'boss', 'mary', 'eric', 'carl']) await signUp(n);
   await db.query(`update members set role = 'staff' where user_id = $1`, [users.stella]);
@@ -61,11 +61,11 @@ beforeAll(async () => {
 }, 60_000);
 
 describe('sign up and roles', () => {
-  it('first user is Admin, later users start as Staff', async () => {
+  it('first user is Admin, later users start as Viewer', async () => {
     const rows = (await db.query<{ name: string; role: string }>('select name, role from members order by created_at')).rows;
     expect(rows[0]).toMatchObject({ name: 'amin', role: 'admin' });
     const fresh = await signUp('newbie');
-    expect((await db.query<{ role: string }>('select role from members where user_id = $1', [fresh])).rows[0].role).toBe('staff');
+    expect((await db.query<{ role: string }>('select role from members where user_id = $1', [fresh])).rows[0].role).toBe('viewer');
   });
 
   it('only Admin can change roles, and the last Admin cannot be demoted', async () => {
