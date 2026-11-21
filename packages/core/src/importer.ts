@@ -87,7 +87,13 @@ const isHeaderWord = (s: string) => /^(DESCRIPTION|COLOU?RS|SIZE|PCS|IN LITT?ERS
 function machineCanon(text: string): string | null {
   const m = MACHINES.find((x) => x.match.test(text));
   if (!m) return null;
-  return { 'SK-1': 'SK-1', 'SK-7': 'SK-7', R8: 'UV FLATBED R8', S6: 'UV ROLL TO ROLL S6', WIT: 'WIT COLOR' }[m.id];
+  return { 'SK-1': 'SK-1', 'SK-7': 'SK-7', R8: 'UV FLATBED R8', S6: 'UV ROLL TO ROLL S6', WIT: 'WIT COLOR', SUB: 'SUBLIMATION' }[m.id];
+}
+
+/** "SUBLIMMATION INK" → "SUBLIMATION"; other unknown sections keep their own words. */
+function sectionName(text: string): string {
+  const t = text.toUpperCase().replace(/\b(INKS?|DETAILS?|\d{4})\b/g, ' ').replace(/[-–]+/g, ' ').replace(/\s+/g, ' ').trim();
+  return /SUBLI/.test(t) ? 'SUBLIMATION' : t;
 }
 
 function categoryFromSection(text: string, current: Category): Category {
@@ -151,7 +157,9 @@ export function importSheets(sheets: { name: string; rows: Cell[][] }[], opts: I
       if (!values.length) {
         // A section title such as "FLEXI BANNER MATERIAL" or "SK-7 INK".
         category = categoryFromSection(label, category);
-        if (isInk) machine = machineCanon(label) ?? machine;
+        // A new ink section starts a new group, even for a machine we don't know (e.g. "SUBLIMATION INK").
+        if (isInk && /INK|SOLVENT/i.test(label)) machine = machineCanon(label) ?? sectionName(label);
+        else if (isInk) machine = machineCanon(label) ?? machine;
         return;
       }
 
@@ -161,8 +169,10 @@ export function importSheets(sheets: { name: string; rows: Cell[][] }[], opts: I
       if (isInk) {
         const own = machineCanon(name);
         const m = own ?? machine;
-        const colour = INK_COLOURS.find((c) => new RegExp(`\\b${c}\\b`, 'i').test(name));
-        if (m && colour && (own == null || name.replace(/SK-?\s?\d|INK|\s/gi, '').toLowerCase() === colour)) {
+        const base = INK_COLOURS.find((c) => new RegExp(`\\b${c}\\b`, 'i').test(name));
+        // "LIGHT CYAN" and "LIGHT MAGENTA" are their own colours.
+        const colour = base && new RegExp(`\\bLIGHT\\s+${base}\\b`, 'i').test(name) ? `light ${base}` : base;
+        if (m && colour && (own == null || name.replace(/SK-?\s?\d|INK|\s/gi, '').toLowerCase() === colour.replace(/\s/g, ''))) {
           name = `${m} INK`;
           size = colour.toUpperCase();
         } else if (!own && m) {

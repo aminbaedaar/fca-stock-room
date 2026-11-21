@@ -30,6 +30,7 @@ export function Import() {
   const [map, setMap] = useState<Partial<ColumnMap>>({});
   const [edits, setEdits] = useState<Record<number, Partial<ImportedItem>>>({});
   const [skip, setSkip] = useState<Set<number>>(new Set());
+  const [setStock, setSetStock] = useState(true);
 
   const result = useMemo(() => {
     if (!sheets) return null;
@@ -39,7 +40,15 @@ export function Import() {
   }, [sheets, format, alignment, listSheet, headerRow, map]);
 
   const rows = (result?.items ?? []).map((r, i) => ({ ...r, ...edits[i] }));
-  const existing = new Set(data.items.filter((i) => i.active).map((i) => `${i.name}|${i.size}`));
+  const byKey = new Map(data.items.filter((i) => i.active).map((i) => [`${i.name}|${i.size}`, i]));
+  const keyOf = (r: { name: string; size: string }) => `${r.name.trim().toUpperCase()}|${r.size.trim().toUpperCase()}`;
+  // Items already in the app whose newest count in the file differs from their stock now.
+  const latest = result?.dates[result.dates.length - 1] ?? '';
+  const changes = rows
+    .map((r, i) => ({ r, i, item: byKey.get(keyOf(r)) }))
+    .filter(({ r, i, item }) => item && !skip.has(i) && latest && r.counts[r.counts.length - 1]?.date === latest && r.qty !== item.qty)
+    .map(({ r, item }) => ({ item_id: item!.id, qty: r.qty }));
+  const canCount = can(me?.role, 'stocktake');
 
   if (!can(me?.role, 'import')) return <Navigate to="/" replace />;
 
@@ -70,14 +79,19 @@ export function Import() {
   const save = () => {
     const chosen = rows.filter((_, i) => !skip.has(i));
     if (!chosen.length) return;
-    if (!confirm(`Import ${chosen.length} items? Items that already exist (same name and size) only get their count history added.`)) return;
+    const counting = setStock && canCount && changes.length > 0;
+    const msg = counting
+      ? `Import ${chosen.length} items? New items are added, and ${changes.length} items you already have get their stock set to the ${fmtDate(latest)} count.`
+      : `Import ${chosen.length} items? Items that already exist (same name and size) only get their count history added.`;
+    if (!confirm(msg)) return;
     const ok = dispatch({
       kind: 'import',
       id: newId(),
       rows: chosen.map((r) => ({ name: r.name, size: r.size, category: r.category, unit: r.unit, qty: r.qty, min_level: r.min_level, note: r.note, counts: r.counts })),
     });
+    if (ok && counting) dispatch({ kind: 'stocktake', id: newId(), date: latest, counts: changes });
     if (ok) {
-      toast(`Imported ${chosen.length} items`);
+      toast(counting ? `Imported ${chosen.length} items · ${changes.length} stock counts updated to ${fmtDate(latest)}` : `Imported ${chosen.length} items`);
       setSheets(null);
     }
   };
@@ -146,6 +160,15 @@ export function Import() {
             <button className="btn primary" onClick={save} disabled={rows.length === skip.size}>Import</button>
           </div>
           {result.warnings.map((w) => <p key={w} className="err">{w}</p>)}
+          {canCount && latest && (
+            <label className="row" style={{ gap: 8, margin: '4px 0 12px' }}>
+              <input type="checkbox" style={{ width: 'auto' }} checked={setStock} onChange={(e) => setSetStock(e.target.checked)} />
+              <span>
+                Set stock of items I already have to the <b>{fmtDate(latest)}</b> count ({changes.length} {changes.length === 1 ? 'item changes' : 'items change'}).
+                <span className="muted small"> Saved as a stock take, so each change shows in Movements.</span>
+              </span>
+            </label>
+          )}
           <div className="table-wrap">
             <table>
               <thead>
@@ -177,7 +200,7 @@ export function Import() {
                         })}
                       />
                     </td>
-                    <td>{r.name}{existing.has(`${r.name}|${r.size}`) && <div className="small muted">already exists: history merged</div>}</td>
+                    <td>{r.name}{byKey.has(keyOf(r)) ? <div className="small muted">already in the app</div> : <div className="small muted">new item</div>}</td>
                     <td>{r.size}</td>
                     <td>
                       <select value={r.category} onChange={(e) => edit(i, { category: e.target.value as Category })} aria-label="Category">
@@ -189,7 +212,13 @@ export function Import() {
                         {UNITS.map((u) => <option key={u}>{u}</option>)}
                       </select>
                     </td>
-                    <td className="num">{fmtQty(r.qty)}</td>
+                    <td className="num">
+                      {(() => {
+                        const item = byKey.get(keyOf(r));
+                        if (!item || item.qty === r.qty) return fmtQty(r.qty);
+                        return <span title="Stock in the app now → count in the file"><span className="muted">{fmtQty(item.qty)} →</span> <b>{fmtQty(r.qty)}</b></span>;
+                      })()}
+                    </td>
                     <td className="num">{r.counts.length}</td>
                     <td className="small muted">{r.warnings.join('; ')}</td>
                   </tr>

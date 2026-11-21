@@ -8,6 +8,7 @@ export const MACHINES = [
   { id: 'R8', label: 'UV Flatbed R8', match: /FLAT\s*-?BED|\bR8\b/i },
   { id: 'S6', label: 'UV Roll To Roll S6', match: /ROLL\s*TO\s*ROLL|\bS6\b/i },
   { id: 'WIT', label: 'WIT Color', match: /\bWIT\b/i },
+  { id: 'SUB', label: 'Sublimation', match: /SUBLI/i },
 ] as const;
 
 export type MachineId = (typeof MACHINES)[number]['id'];

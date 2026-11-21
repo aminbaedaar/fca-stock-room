@@ -156,7 +156,7 @@ How much material each client (or each job) used, from stock outs and approved r
 - Only the Admin sees the **Team** tab: everyone who has signed in, with their role and when they were last seen. Other people cannot see the team list.
 - **Admin:** change anyone's role with the drop-down. There must always be at least one Admin. Choose **Viewer** for people who should use the Job calculator and nothing else.
 - The table shows exactly who can do what. These rules are enforced by the database, so they can't be bypassed.
-- **Admin:** **Import from Excel** (add items and count history from a spreadsheet, with a preview before saving) and **Download full backup** (everything in one Excel file).
+- **Admin:** **Import from Excel** (choose the weekly stock report: new items are added, count history is kept, and items you already have get their stock set to the newest count in the file, saved as a stock take so each change shows in Movements. Check the preview first; untick the box to keep today's stock) and **Download full backup** (everything in one Excel file).
 
 ---
 

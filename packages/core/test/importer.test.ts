@@ -83,3 +83,30 @@ describe('importing the October 2026 stock report', () => {
     expect(g.counts[0]).toEqual({ date: '2026-07-30', qty: 272 });
   });
 });
+
+describe('ink sections the five machines do not cover', () => {
+  it('reads a Sublimation section with its own dates and light colours', () => {
+    const rows = [
+      ['INKS-DETAILS 2026'],
+      ['UV-ROLL TO ROLL S6 INK'],
+      ['COLORS', 'IN LITTER '],
+      [null, null, '10.11.026', '16.11.026', '20.11.026'],
+      ['CYAN', 54, 40, 36, 36],
+      [' WHITE', 52, 41, 40, 39],
+      ['SUBLIMMATION INK'],
+      ['COLORS', 'IN LITTER '],
+      [null, '10.11.026', '11.11.026', null, '20.11.026'],
+      ['CYAN', 5, 3, null, 3],
+      ['LIGHT CYAN', 10, 8, null, 8],
+    ];
+    const items = importSheets([{ name: 'INK STOCK', rows }], { alignment: 'aligned' }).items;
+    expect(items.map((i) => `${i.name} | ${i.size} | ${i.qty}`)).toEqual([
+      'UV ROLL TO ROLL S6 INK | CYAN | 36',
+      'UV ROLL TO ROLL S6 INK | WHITE | 39',
+      'SUBLIMATION INK | CYAN | 3',
+      'SUBLIMATION INK | LIGHT CYAN | 8',
+    ]);
+    expect(items[3].counts).toEqual([{ date: '2026-11-10', qty: 10 }, { date: '2026-11-11', qty: 8 }, { date: '2026-11-20', qty: 8 }]);
+    expect(machineOf(items[3].name)).toBe('SUB');
+  });
+});
