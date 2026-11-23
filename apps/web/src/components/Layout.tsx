@@ -28,7 +28,7 @@ export function Layout() {
   });
   const navigate = useNavigate();
   const pendingRequests = data.requests.filter((r) => r.status === 'pending').length;
-  const pendingSpecial = can(me?.role, 'approve_special') ? data.specialJobs.filter((j) => j.status === 'pending' && !j.deleted).length : 0;
+  const pendingSpecial = (kind: string) => (can(me?.role, 'approve_special') ? data.specialJobs.filter((j) => j.kind === kind && j.status === 'pending' && !j.deleted).length : 0);
 
   useEffect(() => {
     applyTheme(theme);
@@ -49,14 +49,15 @@ export function Layout() {
   if (!me) return null;
 
   const seesStock = can(me.role, 'view');
-  const links: [string, string, number?][] = !seesStock ? [['/calculator', t('nav.calculator')], ['/special-jobs', t('nav.special')]] : [
+  const links: [string, string, number?][] = !seesStock ? [['/calculator', t('nav.calculator')], ['/complimentary', t('nav.complimentary')], ['/no-sales-order', t('nav.noSalesOrder')]] : [
     ['/', t('nav.dashboard')],
     ['/stock', t('nav.stock')],
     ['/movements', t('nav.movements')],
     ['/requests', t('nav.requests'), pendingRequests],
     ['/calculator', t('nav.calculator')],
     ['/jobs', t('nav.jobs')],
-    ['/special-jobs', t('nav.special'), pendingSpecial],
+    ['/complimentary', t('nav.complimentary'), pendingSpecial('complimentary')],
+    ['/no-sales-order', t('nav.noSalesOrder'), pendingSpecial('no_sales_order')],
     ...(can(me.role, 'roles') ? [['/team', t('nav.team')] as [string, string]] : []),
   ];
 

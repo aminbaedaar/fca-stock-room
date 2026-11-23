@@ -16,7 +16,7 @@ const f2 = (n: number) => (Math.round(n * 100) / 100).toFixed(2);
 
 // Complimentary jobs and jobs without a sales order. Everyone enters their own;
 // the Boss or Admin approves them, ticks Invoiced, and prints the weekly PDF.
-export function SpecialJobs() {
+export function SpecialJobs({ kind }: { kind: SpecialKind }) {
   const { data, me, dispatch, toast } = useStore();
   const boss = can(me?.role, 'approve_special');
   const [filter, setFilter] = useState<Filter>(boss ? 'pending' : 'all');
@@ -30,7 +30,7 @@ export function SpecialJobs() {
   const [deleting, setDeleting] = useState<SpecialJob | null>(null);
 
   // People see their own jobs; the Boss and Admin see everyone's (the database does the same).
-  const mine = useMemo(() => data.specialJobs.filter((j) => boss || j.created_by === me?.user_id), [data.specialJobs, boss, me?.user_id]);
+  const mine = useMemo(() => data.specialJobs.filter((j) => j.kind === kind && (boss || j.created_by === me?.user_id)), [data.specialJobs, kind, boss, me?.user_id]);
   const count = (f: Filter) => mine.filter((j) => match(j, f)).length;
   const list = mine.filter((j) => match(j, filter));
   const weekJobs = mine.filter((j) => j.job_date >= week && j.job_date <= addDaysIso(week, 6));
@@ -43,8 +43,8 @@ export function SpecialJobs() {
   const pdf = async () => {
     setBusy(true);
     try {
-      const blob = await buildSpecialPdf(weekJobs, week, me.name || me.email, (path) => backend.photoUrl(path));
-      await saveFile(specialPdfName(week), blob);
+      const blob = await buildSpecialPdf(weekJobs, week, me.name || me.email, (path) => backend.photoUrl(path), kind);
+      await saveFile(specialPdfName(week, kind), blob);
     } catch (e) {
       toast(`Could not make the PDF: ${(e as Error).message}`, 'error');
     } finally {
@@ -55,7 +55,7 @@ export function SpecialJobs() {
   return (
     <>
       <div className="page-head">
-        <h1>Complimentary & no sales order jobs</h1>
+        <h1>{kind === 'complimentary' ? 'Complimentary jobs' : 'No sales order jobs'}</h1>
         <span className="spacer" />
         {can(me.role, 'special') && (
           <button className="btn primary" onClick={() => setEditing('new')}>
@@ -244,7 +244,7 @@ export function SpecialJobs() {
           onSave={(reason) => dispatch({ kind: 'deleteSpecial', id: newId(), job_id: deleting.id, reason }) && (toast('Job deleted: it is kept under Deleted with your reason'), true)}
         />
       )}
-      {editing && <JobForm job={editing === 'new' ? null : editing} onClose={() => setEditing(null)} />}
+      {editing && <JobForm kind={kind} job={editing === 'new' ? null : editing} onClose={() => setEditing(null)} />}
       {staging && <StageForm job={staging} onClose={() => setStaging(null)} />}
       {rejecting && (
         <NoteForm
@@ -278,9 +278,8 @@ function match(j: SpecialJob, f: Filter) {
   return j.status === 'approved' && j.invoiced === (f === 'invoiced');
 }
 
-function JobForm({ job, onClose }: { job: SpecialJob | null; onClose: () => void }) {
+function JobForm({ kind, job, onClose }: { kind: SpecialKind; job: SpecialJob | null; onClose: () => void }) {
   const { data, dispatch, toast } = useStore();
-  const [kind, setKind] = useState<SpecialKind>(job?.kind ?? 'complimentary');
   const [client, setClient] = useState(job?.client ?? '');
   const [title, setTitle] = useState(job?.job ?? '');
   const [date, setDate] = useState(job?.job_date ?? kigaliDay());
@@ -331,7 +330,7 @@ function JobForm({ job, onClose }: { job: SpecialJob | null; onClose: () => void
 
   return (
     <Modal
-      title={job ? 'Edit job' : 'New complimentary / no sales order job'}
+      title={`${job ? 'Edit' : 'New'} ${kind === 'complimentary' ? 'complimentary' : 'no sales order'} job`}
       onClose={onClose}
       footer={
         <>
@@ -346,14 +345,7 @@ function JobForm({ job, onClose }: { job: SpecialJob | null; onClose: () => void
         </>
       }
     >
-      <div className="seg" role="group" aria-label="Type of job" style={{ marginBottom: 12 }}>
-        {(Object.keys(SPECIAL_KINDS) as SpecialKind[]).map((k) => (
-          <button key={k} className={kind === k ? 'on' : ''} onClick={() => setKind(k)} aria-pressed={kind === k}>
-            {SPECIAL_KINDS[k]}
-          </button>
-        ))}
-      </div>
-      <div className="fields">
+            <div className="fields">
         <Field label="Client name *">
           <input value={client} onChange={(e) => setClient(e.target.value)} maxLength={120} />
         </Field>

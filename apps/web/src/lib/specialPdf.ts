@@ -1,7 +1,7 @@
 // Weekly PDF of complimentary and no-sales-order jobs, for the Boss to check
 // whether each job has been invoiced. Same First Choice look as the SQM report.
 
-import { SPECIAL_KINDS, SPECIAL_STAGES, sqmDate, type SpecialJob } from '@fca/core';
+import { SPECIAL_KINDS, SPECIAL_STAGES, sqmDate, type SpecialJob, type SpecialKind } from '@fca/core';
 
 type RGB = [number, number, number];
 const INK: RGB = [27, 35, 33],
@@ -58,8 +58,8 @@ export function addDaysIso(day: string, n: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-export function specialPdfName(monday: string) {
-  return `Complimentary-NoSO-Jobs-week-${monday}.pdf`;
+export function specialPdfName(monday: string, kind?: SpecialKind) {
+  return `${kind === 'complimentary' ? 'Complimentary' : kind === 'no_sales_order' ? 'No-Sales-Order' : 'Complimentary-NoSO'}-Jobs-week-${monday}.pdf`;
 }
 
 async function loadPhoto(url: string): Promise<Logo | null> {
@@ -67,7 +67,7 @@ async function loadPhoto(url: string): Promise<Logo | null> {
   return l.src ? l : null;
 }
 
-export async function buildSpecialPdf(jobs: SpecialJob[], monday: string, madeBy: string, photoUrl?: (path: string) => Promise<string>): Promise<Blob> {
+export async function buildSpecialPdf(jobs: SpecialJob[], monday: string, madeBy: string, photoUrl?: (path: string) => Promise<string>, kind?: SpecialKind): Promise<Blob> {
   const [{ jsPDF }, autoTableMod, MARK, WORD] = await Promise.all([
     import('jspdf'),
     import('jspdf-autotable'),
@@ -106,7 +106,7 @@ export async function buildSpecialPdf(jobs: SpecialJob[], monday: string, madeBy
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(15);
   doc.setTextColor(...PURPLE);
-  doc.text('Complimentary & No Sales Order Jobs', PW - M, 15, { align: 'right' });
+  doc.text(kind === 'complimentary' ? 'Complimentary Jobs' : kind === 'no_sales_order' ? 'No Sales Order Jobs' : 'Complimentary & No Sales Order Jobs', PW - M, 15, { align: 'right' });
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9.5);
   doc.setTextColor(...ORANGE);
@@ -165,7 +165,7 @@ export async function buildSpecialPdf(jobs: SpecialJob[], monday: string, madeBy
           invTxt(j),
           '',
         ])
-      : [[{ content: 'No complimentary or no-sales-order jobs this week.', colSpan: 12, styles: { textColor: MUT, halign: 'center' } }]],
+      : [[{ content: `No ${kind === 'complimentary' ? 'complimentary' : kind === 'no_sales_order' ? 'no sales order' : 'complimentary or no sales order'} jobs this week.`, colSpan: 12, styles: { textColor: MUT, halign: 'center' } }]],
     styles: { font: 'helvetica', fontSize: 7.6, textColor: INK, cellPadding: { top: 1.6, bottom: 1.6, left: 1.4, right: 1.4 }, lineColor: [232, 226, 229], valign: 'top' },
     headStyles: { fontStyle: 'bold', textColor: PURPLE, lineWidth: { bottom: 0.5 }, lineColor: PURPLE },
     bodyStyles: { lineWidth: { bottom: 0.15 } },
