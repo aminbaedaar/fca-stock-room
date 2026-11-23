@@ -16,6 +16,7 @@ import { Import } from './pages/Import';
 import { PrintSheet } from './pages/PrintSheet';
 import { Calculator } from './pages/Calculator';
 import { SpecialJobs } from './pages/SpecialJobs';
+import { WaitingApproval } from './pages/WaitingApproval';
 
 /** Shows a desktop notification when a new Monday summary arrives. */
 function ReportWatcher() {
@@ -38,6 +39,7 @@ function Shell() {
   if (!authReady) return <div className="login muted">{t('common.loading')}</div>;
   if (!me) return <Login />;
   if (resetting) return <Login reset />;
+  if (me.approved === false) return <WaitingApproval />;
   if (!loaded) return <div className="login muted">{t('common.loading')}</div>;
   // "Calculator only": the job calculator and nothing else.
   if (!can(me.role, 'view'))

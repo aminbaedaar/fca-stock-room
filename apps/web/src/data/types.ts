@@ -37,6 +37,7 @@ export type Op =
   | { kind: 'request'; id: string; item_id: string; qty: number; client: string; job: string; note: string }
   | { kind: 'decide'; id: string; request_id: string; approve: boolean }
   | { kind: 'setRole'; id: string; user_id: string; role: Role }
+  | { kind: 'approveMember'; id: string; user_id: string; approve: boolean }
   | { kind: 'import'; id: string; rows: ImportRow[] }
   | { kind: 'saveSqmMaterials'; id: string; materials: SqmMaterial[] }
   | { kind: 'saveSpecial'; id: string; job_id: string; fields: SpecialFields }
@@ -56,7 +57,7 @@ export interface SpecialFields {
 }
 
 /** Ops that need the internet right away (not queued offline). */
-export const ONLINE_ONLY: Op['kind'][] = ['setRole', 'import'];
+export const ONLINE_ONLY: Op['kind'][] = ['setRole', 'approveMember', 'import'];
 
 export interface AiProposal {
   tool_use_id: string;

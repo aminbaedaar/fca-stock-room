@@ -163,6 +163,8 @@ export const supabaseBackend: Backend = {
         return rpc('decide_request', { p_id: op.id, p_request: op.request_id, p_approve: op.approve });
       case 'setRole':
         return rpc('set_role', { p_user: op.user_id, p_role: op.role });
+      case 'approveMember':
+        return rpc('approve_member', { p_user: op.user_id, p_approve: op.approve });
       case 'import':
         return rpc('import_items', { p_items: op.rows });
       case 'saveSqmMaterials':

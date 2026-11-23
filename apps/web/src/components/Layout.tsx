@@ -58,7 +58,7 @@ export function Layout() {
     ['/jobs', t('nav.jobs')],
     ['/complimentary', t('nav.complimentary'), pendingSpecial('complimentary')],
     ['/no-sales-order', t('nav.noSalesOrder'), pendingSpecial('no_sales_order')],
-    ...(can(me.role, 'roles') ? [['/team', t('nav.team')] as [string, string]] : []),
+    ...(can(me.role, 'roles') ? [['/team', t('nav.team'), data.members.filter((m) => m.approved === false).length] as [string, string, number]] : []),
   ];
 
   return (

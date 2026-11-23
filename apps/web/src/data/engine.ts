@@ -236,6 +236,16 @@ export function applyOp(s: Snapshot, op: Op, me: Member): Snapshot {
       return { ...s, members: s.members.map((m) => (m.user_id === op.user_id ? { ...m, role: op.role } : m)) };
     }
 
+    case 'approveMember': {
+      require(me, 'roles');
+      const target = s.members.find((m) => m.user_id === op.user_id);
+      if (!target) throw new OpError('User not found.');
+      if (!op.approve && target.user_id === me.user_id) throw new OpError('You cannot block yourself.');
+      if (!op.approve && target.role === 'admin' && s.members.filter((m) => m.role === 'admin' && m.approved !== false).length <= 1)
+        throw new OpError('There must always be at least one Admin.');
+      return { ...s, members: s.members.map((m) => (m.user_id === op.user_id ? { ...m, approved: op.approve } : m)) };
+    }
+
     case 'saveSqmMaterials': {
       require(me, 'items');
       if (!op.materials.length) throw new OpError('The materials list cannot be empty.');

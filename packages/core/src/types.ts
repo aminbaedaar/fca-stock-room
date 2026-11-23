@@ -88,6 +88,8 @@ export interface Member {
   photo: string;
   role: Role;
   last_seen: string | null;
+  /** New accounts wait for the Admin (false). Missing = older data, treated as approved. */
+  approved?: boolean;
 }
 
 // Complimentary jobs and jobs without a sales order (approved by the Boss or Admin).

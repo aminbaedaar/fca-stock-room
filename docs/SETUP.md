@@ -256,7 +256,7 @@ These warnings appear because the installers are not code-signed yet. To remove 
 
 1. Send staff the website address (or the desktop installer).
 2. They click **Create account**, enter their name, email and a password.
-3. They start as **Staff**. As Admin, open **Team** and set each person's role: **Boss** (same rights as Manager), **Manager**, **Staff**, or **Viewer**.
+3. They see "Waiting for approval". As Admin, open **Team**, find them under **Waiting for approval**, pick a role and press **Approve**. Roles: **Boss** (same rights as Manager), **Manager**, **Staff**, or **Viewer**.
 
 Suggested for your team: 1 Admin, 3 Bosses, 5–6 Managers, 3–4 Staff.
 

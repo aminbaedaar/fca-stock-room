@@ -48,9 +48,10 @@ let mesh: string;
 beforeAll(async () => {
   db = new PGlite();
   await db.exec(SHIM);
-  for (const f of ['0001_schema.sql', '0002_functions.sql', '0003_rls.sql', '0004_sqm.sql', '0005_calculator_role.sql', '0006_viewer_calculator_only.sql', '0007_team_and_reverse.sql', '0008_new_users_viewer.sql', '0009_special_jobs.sql', '0010_special_jobs_deleted.sql']) await db.exec(migration(f));
+  for (const f of ['0001_schema.sql', '0002_functions.sql', '0003_rls.sql', '0004_sqm.sql', '0005_calculator_role.sql', '0006_viewer_calculator_only.sql', '0007_team_and_reverse.sql', '0008_new_users_viewer.sql', '0009_special_jobs.sql', '0010_special_jobs_deleted.sql', '0011_approve_new_members.sql']) await db.exec(migration(f));
   await db.exec('grant usage on schema public, auth to authenticated; grant select on all tables in schema public to authenticated;');
   for (const n of ['amin', 'stella', 'boss', 'mary', 'eric', 'carl']) await signUp(n);
+  for (const n of ['stella', 'boss', 'mary', 'eric', 'carl']) await as('amin', 'select approve_member($1, true)', [users[n]]);
   await db.query(`update members set role = 'staff' where user_id = $1`, [users.stella]);
   await db.query(`update members set role = 'boss' where user_id = $1`, [users.boss]);
   await db.query(`update members set role = 'manager' where user_id = $1`, [users.mary]);
@@ -66,6 +67,21 @@ describe('sign up and roles', () => {
     expect(rows[0]).toMatchObject({ name: 'amin', role: 'admin' });
     const fresh = await signUp('newbie');
     expect((await db.query<{ role: string }>('select role from members where user_id = $1', [fresh])).rows[0].role).toBe('viewer');
+  });
+
+  it('a new account waits for the Admin: it can sign in but sees and changes nothing', async () => {
+    await signUp('stranger');
+    expect((await db.query<{ approved: boolean }>('select approved from members where user_id = $1', [users.stranger])).rows[0].approved).toBe(false);
+    expect((await as('stranger', 'select count(*)::int as n from sqm_materials'))[0].n).toBe(0);
+    expect((await as('stranger', 'select approved from members'))).toEqual([{ approved: false }]); // only itself
+    await expect(as('stranger', `select save_special_job($1, 'complimentary', 'X', 'Y', current_date, '[]', 'test')`, [randomUUID()])).rejects.toThrow(/not allowed/);
+    await expect(as('stranger', 'select approve_member($1, true)', [users.stranger])).rejects.toThrow(/not allowed/);
+    await expect(as('mary', 'select approve_member($1, true)', [users.stranger])).rejects.toThrow(/not allowed/);
+    await as('amin', 'select approve_member($1, true)', [users.stranger]);
+    expect((await as('stranger', 'select count(*)::int as n from sqm_materials'))[0].n).toBeGreaterThan(0);
+    await as('amin', 'select approve_member($1, false)', [users.stranger]); // blocked again
+    expect((await as('stranger', 'select count(*)::int as n from sqm_materials'))[0].n).toBe(0);
+    await expect(as('amin', 'select approve_member($1, false)', [users.amin])).rejects.toThrow(/block yourself/);
   });
 
   it('only Admin can change roles, and the last Admin cannot be demoted', async () => {

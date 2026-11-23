@@ -10,7 +10,7 @@ For everyone at First Choice Africa Limited. Each section says who can do it.
 
 - **Website:** open the address your Admin gives you. On a phone you can add it to the home screen (iPhone: Share → *Add to Home Screen*; Android: menu → *Install app*).
 - **Desktop app:** open **FCA Stock Room** from Applications (Mac) or the Start menu (Windows).
-- First time: **Create account** with your name, email and a password (at least 8 characters). You start as **Viewer** (only the job calculator) until the Admin changes your role on the Team page.
+- First time: **Create account** with your name, email and a password (at least 8 characters). Your account then **waits for the Admin to approve it**: until then you only see a "Waiting for approval" screen and cannot see or change anything. Once approved you start as **Viewer** (only the job calculator) until the Admin changes your role on the Team page.
 - Forgot your password: **Forgot password?** → enter your email → click the link in the email.
 
 Your name, photo and role are shown at the top right. Click them for: theme (light/dark), **Turn on notifications**, the printable stock-take sheet, and **Sign out**.
@@ -164,7 +164,7 @@ How much material each client (or each job) used, from stock outs and approved r
 ## Team & roles — Admin only
 
 - Only the Admin sees the **Team** tab: everyone who has signed in, with their role and when they were last seen. Other people cannot see the team list.
-- **Admin:** change anyone's role with the drop-down. There must always be at least one Admin. Choose **Viewer** for people who should use the Job calculator and nothing else.
+- **Admin:** new accounts appear at the top under **Waiting for approval** (the Team tab shows a number). Pick their role and press **Approve**. Press **Block** next to someone to stop them using the app (you can approve them again later). Change anyone's role with the drop-down. There must always be at least one Admin. Choose **Viewer** for people who should use the Job calculator and nothing else.
 - The table shows exactly who can do what. These rules are enforced by the database, so they can't be bypassed.
 - **Admin:** **Import from Excel** (choose the weekly stock report: new items are added, count history is kept, and items you already have get their stock set to the newest count in the file, saved as a stock take so each change shows in Movements. Check the preview first; untick the box to keep today's stock) and **Download full backup** (everything in one Excel file).
 
