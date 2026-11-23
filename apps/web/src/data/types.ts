@@ -1,4 +1,4 @@
-import type { Category, Count, Item, Member, Move, Report, Role, SqmMaterial, StockRequest, Unit } from '@fca/core';
+import type { Category, Count, Item, Member, Move, Report, Role, SpecialJob, SpecialKind, SpecialLine, SpecialStage, SqmMaterial, StockRequest, Unit } from '@fca/core';
 
 export interface Snapshot {
   items: Item[];
@@ -7,9 +7,10 @@ export interface Snapshot {
   reports: Report[]; // newest first
   members: Member[];
   sqmMaterials: SqmMaterial[]; // job calculator materials
+  specialJobs: SpecialJob[]; // complimentary / no sales order jobs, newest first
 }
 
-export const emptySnapshot = (): Snapshot => ({ items: [], moves: [], requests: [], reports: [], members: [], sqmMaterials: [] });
+export const emptySnapshot = (): Snapshot => ({ items: [], moves: [], requests: [], reports: [], members: [], sqmMaterials: [], specialJobs: [] });
 
 export interface ItemFields {
   name: string;
@@ -37,7 +38,22 @@ export type Op =
   | { kind: 'decide'; id: string; request_id: string; approve: boolean }
   | { kind: 'setRole'; id: string; user_id: string; role: Role }
   | { kind: 'import'; id: string; rows: ImportRow[] }
-  | { kind: 'saveSqmMaterials'; id: string; materials: SqmMaterial[] };
+  | { kind: 'saveSqmMaterials'; id: string; materials: SqmMaterial[] }
+  | { kind: 'saveSpecial'; id: string; job_id: string; fields: SpecialFields }
+  | { kind: 'specialStage'; id: string; job_id: string; stage: SpecialStage; note: string; at: string }
+  | { kind: 'decideSpecial'; id: string; job_id: string; approve: boolean; note: string }
+  | { kind: 'invoiceSpecial'; id: string; job_id: string; invoiced: boolean; invoice_no: string }
+  | { kind: 'deleteSpecial'; id: string; job_id: string };
+
+export interface SpecialFields {
+  kind: SpecialKind;
+  client: string;
+  job: string;
+  job_date: string;
+  lines: SpecialLine[];
+  reason: string;
+  photos: string[];
+}
 
 /** Ops that need the internet right away (not queued offline). */
 export const ONLINE_ONLY: Op['kind'][] = ['setRole', 'import'];

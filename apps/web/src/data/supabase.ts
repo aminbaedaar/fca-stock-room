@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { FCA_SQM_MATERIALS, type Count, type Item, type Member, type Move, type Report, type SqmMaterial, type StockRequest } from '@fca/core';
+import { FCA_SQM_MATERIALS, type Count, type Item, type Member, type Move, type Report, type SpecialJob, type SqmMaterial, type StockRequest } from '@fca/core';
 import { ServerError, type Backend } from './backend';
 import type { Op, Snapshot } from './types';
 import { localAssistant } from './localAssistant';
@@ -103,7 +103,7 @@ export const supabaseBackend: Backend = {
 
   async load() {
     const since = new Date(Date.now() - 400 * 86_400_000).toISOString().slice(0, 10);
-    const [items, counts, moves, requests, reports, members, sqm] = await Promise.all([
+    const [items, counts, moves, requests, reports, members, sqm, special] = await Promise.all([
       all<Item>((a, b) => sb().from('items').select('*').order('sort').range(a, b)),
       all<Count & { item_id: string }>((a, b) => sb().from('counts').select('*').gte('date', since).order('date').range(a, b)),
       all<Move>((a, b) => sb().from('moves').select('*').order('at', { ascending: false }).range(a, b), 5000),
@@ -112,6 +112,8 @@ export const supabaseBackend: Backend = {
       all<Member>((a, b) => sb().from('members').select('*').order('name').range(a, b)),
       // Until supabase/migrations/0004_sqm.sql is run, use the starting list.
       all<SqmMaterial>((a, b) => sb().from('sqm_materials').select('*').order('sort').range(a, b)).catch(() => FCA_SQM_MATERIALS),
+      // Until supabase/migrations/0009_special_jobs.sql is run, there are none.
+      all<SpecialJob>((a, b) => sb().from('special_jobs').select('*').order('job_date', { ascending: false }).order('created_at', { ascending: false }).range(a, b), 5000).catch(() => [] as SpecialJob[]),
     ]);
     const byItem = new Map<string, Count[]>();
     for (const c of counts) {
@@ -126,6 +128,7 @@ export const supabaseBackend: Backend = {
       reports,
       members,
       sqmMaterials: sqm.map((m) => ({ ...m, width: num(m.width), length: num(m.length), bleed: num(m.bleed), overlap: num(m.overlap) })),
+      specialJobs: special.map((j) => ({ ...j, sqm: num(j.sqm), lines: (j.lines ?? []).map((l) => ({ ...l, width_cm: num(l.width_cm), height_cm: num(l.height_cm), qty: num(l.qty) })), updates: j.updates ?? [], photos: j.photos ?? [] })),
     } satisfies Snapshot;
   },
 
@@ -164,6 +167,18 @@ export const supabaseBackend: Backend = {
         return rpc('import_items', { p_items: op.rows });
       case 'saveSqmMaterials':
         return rpc('save_sqm_materials', { p_materials: op.materials });
+      case 'saveSpecial': {
+        const f = op.fields;
+        return rpc('save_special_job', { p_id: op.job_id, p_kind: f.kind, p_client: f.client, p_job: f.job, p_date: f.job_date, p_lines: f.lines, p_reason: f.reason, p_photos: f.photos });
+      }
+      case 'specialStage':
+        return rpc('update_special_stage', { p_job: op.job_id, p_stage: op.stage, p_note: op.note, p_at: op.at });
+      case 'decideSpecial':
+        return rpc('decide_special_job', { p_job: op.job_id, p_approve: op.approve, p_note: op.note });
+      case 'invoiceSpecial':
+        return rpc('set_special_invoiced', { p_job: op.job_id, p_invoiced: op.invoiced, p_invoice_no: op.invoice_no });
+      case 'deleteSpecial':
+        return rpc('delete_special_job', { p_job: op.job_id });
     }
   },
 
@@ -192,6 +207,22 @@ export const supabaseBackend: Backend = {
   async writeSummary() {
     const { error } = await sb().functions.invoke('monday-summary', { body: { source: 'manual' } });
     if (error) throw new ServerError(error.message);
+  },
+
+  async uploadPhoto(photo) {
+    const { data } = await sb().auth.getUser();
+    if (!data.user) throw new Error('Please sign in again.');
+    const path = `${data.user.id}/${crypto.randomUUID()}.jpg`;
+    const { error } = await sb().storage.from('special-jobs').upload(path, photo, { contentType: 'image/jpeg', upsert: false });
+    if (error) throw new Error(/bucket/i.test(error.message) ? 'Screenshots are not set up yet: run the database update 0009 in Supabase.' : error.message);
+    return path;
+  },
+
+  async photoUrl(path) {
+    if (path.startsWith('data:')) return path;
+    const { data, error } = await sb().storage.from('special-jobs').createSignedUrl(path, 3600);
+    if (error || !data) throw new Error(error?.message ?? 'Screenshot not found.');
+    return data.signedUrl;
   },
 
   async savePushSubscription(sub) {

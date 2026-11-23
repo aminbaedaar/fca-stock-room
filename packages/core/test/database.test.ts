@@ -48,7 +48,7 @@ let mesh: string;
 beforeAll(async () => {
   db = new PGlite();
   await db.exec(SHIM);
-  for (const f of ['0001_schema.sql', '0002_functions.sql', '0003_rls.sql', '0004_sqm.sql', '0005_calculator_role.sql', '0006_viewer_calculator_only.sql', '0007_team_and_reverse.sql', '0008_new_users_viewer.sql']) await db.exec(migration(f));
+  for (const f of ['0001_schema.sql', '0002_functions.sql', '0003_rls.sql', '0004_sqm.sql', '0005_calculator_role.sql', '0006_viewer_calculator_only.sql', '0007_team_and_reverse.sql', '0008_new_users_viewer.sql', '0009_special_jobs.sql']) await db.exec(migration(f));
   await db.exec('grant usage on schema public, auth to authenticated; grant select on all tables in schema public to authenticated;');
   for (const n of ['amin', 'stella', 'boss', 'mary', 'eric', 'carl']) await signUp(n);
   await db.query(`update members set role = 'staff' where user_id = $1`, [users.stella]);
@@ -256,5 +256,84 @@ describe('team list: Admin only', () => {
       const rows = await as<{ user_id: string }>(n, 'select user_id from members');
       expect(rows.map((r) => r.user_id), n).toEqual([users[n]]);
     }
+  });
+});
+
+describe('complimentary / no sales order jobs', () => {
+  const LINES = JSON.stringify([{ material: 'Glossy Sticker', width_cm: 90, height_cm: 120, qty: 4 }]);
+  const save = (who: string, id: string, client = 'Bralirwa', lines = LINES) =>
+    as(who, `select (save_special_job($1, 'complimentary', $2, 'Shop front', '2026-11-20', $3::jsonb, 'Free sample')).*`, [id, client, lines]);
+  let job: string;
+
+  it('anyone, a Viewer too, can enter one; SQM is worked out', async () => {
+    job = randomUUID();
+    const [row] = await save('eric', job);
+    expect(row).toMatchObject({ status: 'pending', created_by_name: 'eric', stage: 'not_started' });
+    expect(Number(row.sqm)).toBe(4.32);
+  });
+
+  it('people see only their own; the Boss and Admin see all', async () => {
+    await save('stella', randomUUID(), 'MTN');
+    expect((await as('eric', 'select client from special_jobs')).map((r: any) => r.client)).toEqual(['Bralirwa']);
+    expect((await as('mary', 'select id from special_jobs')).length).toBe(0); // a Manager sees only their own
+    expect((await as('boss', 'select id from special_jobs')).length).toBe(2);
+    expect((await as('amin', 'select id from special_jobs')).length).toBe(2);
+  });
+
+  it('only the person who made it can change it or its job status', async () => {
+    await expect(save('stella', job, 'Changed')).rejects.toThrow(/Only the person who made/);
+    await expect(save('boss', job, 'Changed')).rejects.toThrow(/Only the person who made/);
+    await expect(as('boss', `select update_special_stage($1, 'printing', '', now())`, [job])).rejects.toThrow(/Only the person who made/);
+    const [r] = await as('eric', `select (update_special_stage($1, 'printing', 'On the printer', now())).*`, [job]);
+    expect(r.stage).toBe('printing');
+    expect(r.updates[0]).toMatchObject({ stage: 'printing', note: 'On the printer', by: 'eric' });
+  });
+
+  it('only the Boss or Admin approve; Managers cannot', async () => {
+    await expect(as('mary', `select decide_special_job($1, true, '')`, [job])).rejects.toThrow(/not allowed/);
+    await expect(as('eric', `select decide_special_job($1, true, '')`, [job])).rejects.toThrow(/not allowed/);
+    await expect(as('boss', `select set_special_invoiced($1, true, 'INV-1')`, [job])).rejects.toThrow(/Only approved/);
+    const [r] = await as('boss', `select (decide_special_job($1, true, '')).*`, [job]);
+    expect(r).toMatchObject({ status: 'approved', decided_by_name: 'boss' });
+  });
+
+  it('a job status update keeps the approval', async () => {
+    const [r] = await as('eric', `select (update_special_stage($1, 'delivered', '', now())).*`, [job]);
+    expect(r).toMatchObject({ stage: 'delivered', status: 'approved' });
+  });
+
+  it('the Boss ticks invoiced; editing the details sends it back for approval', async () => {
+    const [inv] = await as('amin', `select (set_special_invoiced($1, true, 'INV-77')).*`, [job]);
+    expect(inv).toMatchObject({ invoiced: true, invoice_no: 'INV-77', invoiced_by_name: 'amin' });
+    const [same] = await save('eric', job); // sent twice: nothing changes
+    expect(same.status).toBe('approved');
+    const [edited] = await save('eric', job, 'Bralirwa Ltd');
+    expect(edited).toMatchObject({ status: 'pending', client: 'Bralirwa Ltd', decided_by_name: '' });
+  });
+
+  it('rejecting needs a reason; approved jobs cannot be deleted', async () => {
+    await expect(as('boss', `select decide_special_job($1, false, '')`, [job])).rejects.toThrow(/why it is rejected/);
+    await as('boss', `select decide_special_job($1, true, '')`, [job]);
+    await expect(as('eric', `select delete_special_job($1)`, [job])).rejects.toThrow(/cannot be deleted/);
+    const other = randomUUID();
+    await save('eric', other, 'Temp');
+    await expect(as('stella', `select delete_special_job($1)`, [other])).rejects.toThrow(/Only the person/);
+    await as('eric', `select delete_special_job($1)`, [other]);
+    expect((await as('eric', 'select id from special_jobs where id = $1', [other])).length).toBe(0);
+  });
+
+  it('keeps up to 6 screenshots; changing them needs a new approval', async () => {
+    const id = randomUUID();
+    const sql = `select (save_special_job($1, 'no_sales_order', 'Inyange', '', '2026-11-21', $2::jsonb, 'SO next week', $3::jsonb)).*`;
+    const [r] = await as('stella', sql, [id, LINES, JSON.stringify(['u/a.jpg', 'u/b.jpg'])]);
+    expect(r.photos).toEqual(['u/a.jpg', 'u/b.jpg']);
+    await as('boss', `select decide_special_job($1, true, '')`, [id]);
+    const [r2] = await as('stella', sql, [id, LINES, JSON.stringify(['u/a.jpg'])]);
+    expect(r2.status).toBe('pending');
+    await expect(as('stella', sql, [id, LINES, JSON.stringify(['1', '2', '3', '4', '5', '6', '7'])])).rejects.toThrow(/At most 6/);
+  });
+
+  it('nobody can write the table directly', async () => {
+    await expect(as('amin', `update special_jobs set invoiced = false`)).rejects.toThrow(/permission denied/);
   });
 });

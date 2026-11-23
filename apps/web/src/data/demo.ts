@@ -30,13 +30,13 @@ function initial(): Snapshot {
     created_at: now,
     updated_at: now,
   })) as Item[];
-  return { items, moves: [], requests: [], reports: [], members: DEMO_MEMBERS, sqmMaterials: FCA_SQM_MATERIALS };
+  return { items, moves: [], requests: [], reports: [], members: DEMO_MEMBERS, sqmMaterials: FCA_SQM_MATERIALS, specialJobs: [] };
 }
 
 function read(): Snapshot {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return { sqmMaterials: FCA_SQM_MATERIALS, ...JSON.parse(raw) };
+    if (raw) return { sqmMaterials: FCA_SQM_MATERIALS, specialJobs: [], ...JSON.parse(raw) };
   } catch {
     /* fall through */
   }
@@ -112,6 +112,18 @@ export const demoBackend: Backend = {
 
   async ai(messages, snapshot, me) {
     return localAssistant(messages, snapshot, me);
+  },
+  // Demo: the picture is kept inside the job itself (this browser only).
+  async uploadPhoto(photo) {
+    return await new Promise<string>((ok, no) => {
+      const fr = new FileReader();
+      fr.onload = () => ok(String(fr.result));
+      fr.onerror = () => no(new Error('Could not read the picture.'));
+      fr.readAsDataURL(photo);
+    });
+  },
+  async photoUrl(path) {
+    return path;
   },
   async writeSummary(snapshot) {
     const id = kigaliDay();

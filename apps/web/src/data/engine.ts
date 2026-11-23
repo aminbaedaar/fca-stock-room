@@ -1,4 +1,4 @@
-import { can, itemLabel, kigaliDay, round, type Item, type Member, type Move, type Permission } from '@fca/core';
+import { can, itemLabel, kigaliDay, round, specialSqm, type Item, type Member, type Move, type Permission, type SpecialJob } from '@fca/core';
 import { fmtDate } from '@fca/core';
 import type { Op, Snapshot } from './types';
 
@@ -241,6 +241,84 @@ export function applyOp(s: Snapshot, op: Op, me: Member): Snapshot {
       if (!op.materials.length) throw new OpError('The materials list cannot be empty.');
       if (op.materials.some((m) => !m.name.trim())) throw new OpError('Every material needs a name.');
       return { ...s, sqmMaterials: op.materials.map((m) => ({ ...m, name: clean(m.name, 80) })) };
+    }
+
+    case 'saveSpecial': {
+      require(me, 'special');
+      const f = op.fields;
+      const client = clean(f.client, 120);
+      const reason = clean(f.reason, 500);
+      if (!['complimentary', 'no_sales_order'].includes(f.kind)) throw new OpError('Choose Complimentary or No sales order.');
+      if (!client) throw new OpError('Enter the client name.');
+      if (reason.length < 3) throw new OpError('Please write the reason.');
+      if (!f.job_date) throw new OpError('Enter the job date.');
+      if (!f.lines.length) throw new OpError('Add at least one size.');
+      if (f.lines.length > 50) throw new OpError('At most 50 sizes per job.');
+      if (f.lines.some((l) => !(l.width_cm > 0 && l.height_cm > 0))) throw new OpError('Every size needs a width and height above 0.');
+      if (f.lines.some((l) => !(l.qty >= 1))) throw new OpError('Quantity must be 1 or more.');
+      if (f.photos.length > 6) throw new OpError('At most 6 screenshots per job.');
+      const lines = f.lines.map((l) => ({ material: clean(l.material, 80), width_cm: round(l.width_cm, 1), height_cm: round(l.height_cm, 1), qty: Math.round(l.qty) }));
+      const fields = { kind: f.kind, client, job: clean(f.job, 120), job_date: f.job_date, lines, reason, photos: [...f.photos], sqm: specialSqm(lines) };
+      const now = new Date().toISOString();
+      const old = s.specialJobs.find((j) => j.id === op.job_id);
+      if (!old) {
+        const job: SpecialJob = {
+          id: op.job_id, ...fields, stage: 'not_started', updates: [], status: 'pending',
+          decided_by: null, decided_by_name: '', decided_at: null, decide_note: '',
+          invoiced: false, invoice_no: '', invoiced_by_name: '', invoiced_at: null,
+          created_by: me.user_id, created_by_name: nameOf(me), created_at: now, updated_at: now,
+        };
+        return { ...s, specialJobs: [job, ...s.specialJobs] };
+      }
+      if (old.created_by !== me.user_id) throw new OpError('Only the person who made this job can change it.');
+      const same = JSON.stringify([old.kind, old.client, old.job, old.job_date, old.lines, old.reason, old.photos ?? []]) === JSON.stringify([fields.kind, fields.client, fields.job, fields.job_date, fields.lines, fields.reason, fields.photos]);
+      if (same) return s;
+      const job: SpecialJob = { ...old, ...fields, updated_at: now, status: 'pending', decided_by: null, decided_by_name: '', decided_at: null, decide_note: '' };
+      return { ...s, specialJobs: s.specialJobs.map((j) => (j.id === job.id ? job : j)) };
+    }
+
+    case 'specialStage': {
+      require(me, 'special');
+      const old = s.specialJobs.find((j) => j.id === op.job_id);
+      if (!old) throw new OpError('Job not found.');
+      if (old.created_by !== me.user_id) throw new OpError('Only the person who made this job can update it.');
+      const at = op.at < new Date().toISOString() ? op.at : new Date().toISOString();
+      if (old.updates.some((u) => u.at === at)) return s;
+      const job: SpecialJob = { ...old, stage: op.stage, updates: [...old.updates, { at, stage: op.stage, note: clean(op.note, 300), by: nameOf(me) }], updated_at: new Date().toISOString() };
+      return { ...s, specialJobs: s.specialJobs.map((j) => (j.id === job.id ? job : j)) };
+    }
+
+    case 'decideSpecial': {
+      require(me, 'approve_special');
+      const old = s.specialJobs.find((j) => j.id === op.job_id);
+      if (!old) throw new OpError('Job not found.');
+      if (old.status !== 'pending') {
+        if (old.status === (op.approve ? 'approved' : 'rejected')) return s;
+        throw new OpError(`This job was already ${old.status}.`);
+      }
+      if (!op.approve && clean(op.note, 300).length < 3) throw new OpError('Please write why it is rejected.');
+      const job: SpecialJob = { ...old, status: op.approve ? 'approved' : 'rejected', decided_by: me.user_id, decided_by_name: nameOf(me), decided_at: new Date().toISOString(), decide_note: clean(op.note, 300) };
+      return { ...s, specialJobs: s.specialJobs.map((j) => (j.id === job.id ? job : j)) };
+    }
+
+    case 'invoiceSpecial': {
+      require(me, 'approve_special');
+      const old = s.specialJobs.find((j) => j.id === op.job_id);
+      if (!old) throw new OpError('Job not found.');
+      if (old.status !== 'approved') throw new OpError('Only approved jobs can be marked invoiced.');
+      const job: SpecialJob = op.invoiced
+        ? { ...old, invoiced: true, invoice_no: clean(op.invoice_no, 60), invoiced_by_name: nameOf(me), invoiced_at: new Date().toISOString() }
+        : { ...old, invoiced: false, invoice_no: '', invoiced_by_name: '', invoiced_at: null };
+      return { ...s, specialJobs: s.specialJobs.map((j) => (j.id === job.id ? job : j)) };
+    }
+
+    case 'deleteSpecial': {
+      require(me, 'special');
+      const old = s.specialJobs.find((j) => j.id === op.job_id);
+      if (!old) return s;
+      if (old.created_by !== me.user_id) throw new OpError('Only the person who made this job can delete it.');
+      if (old.status === 'approved') throw new OpError('An approved job cannot be deleted.');
+      return { ...s, specialJobs: s.specialJobs.filter((j) => j.id !== op.job_id) };
     }
 
     case 'import': {

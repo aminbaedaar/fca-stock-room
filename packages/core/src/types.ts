@@ -89,3 +89,61 @@ export interface Member {
   role: Role;
   last_seen: string | null;
 }
+
+// Complimentary jobs and jobs without a sales order (approved by the Boss or Admin).
+export const SPECIAL_KINDS = { complimentary: 'Complimentary', no_sales_order: 'No sales order' } as const;
+export type SpecialKind = keyof typeof SPECIAL_KINDS;
+export const SPECIAL_STAGES = {
+  not_started: 'Not started',
+  design: 'Design',
+  printing: 'Printing',
+  finishing: 'Finishing',
+  ready: 'Ready',
+  delivered: 'Delivered',
+} as const;
+export type SpecialStage = keyof typeof SPECIAL_STAGES;
+
+export interface SpecialLine {
+  material: string;
+  width_cm: number;
+  height_cm: number;
+  qty: number;
+}
+
+export interface SpecialUpdate {
+  at: string; // ISO
+  stage: SpecialStage;
+  note: string;
+  by: string;
+}
+
+export interface SpecialJob {
+  id: string;
+  kind: SpecialKind;
+  client: string;
+  job: string;
+  job_date: string; // YYYY-MM-DD
+  lines: SpecialLine[];
+  sqm: number;
+  reason: string;
+  photos: string[]; // screenshots (storage paths)
+  stage: SpecialStage;
+  updates: SpecialUpdate[];
+  status: RequestStatus;
+  decided_by: string | null;
+  decided_by_name: string;
+  decided_at: string | null;
+  decide_note: string;
+  invoiced: boolean;
+  invoice_no: string;
+  invoiced_by_name: string;
+  invoiced_at: string | null;
+  created_by: string | null;
+  created_by_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Square metres of a job's sizes, to 2 decimals. */
+export const specialSqm = (lines: SpecialLine[]) =>
+  Math.round(lines.reduce((t, l) => t + (l.width_cm * l.height_cm * l.qty) / 10000, 0) * 100) / 100;

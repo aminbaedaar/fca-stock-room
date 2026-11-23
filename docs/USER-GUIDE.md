@@ -135,6 +135,16 @@ The job you are working on is kept on your device until you press **New job**.
 
 ---
 
+## Complimentary & no sales order jobs — everyone (approval: Boss or Admin)
+
+Open **Free & no-SO jobs** for jobs done free of charge (**Complimentary**) or done before the sales order came (**No sales order**).
+
+- **+ New job**: choose the type, write the client, job and date, add each size (material, width × height in cm, quantity; m² is worked out), add **screenshots** of the job details (WhatsApp order, design, etc.: up to 6; on a computer you can paste with Ctrl+V / ⌘V) and write the **reason**. Press **Send for approval**.
+- You see only the jobs you made. Only you can change your job: **Edit** (if it was already approved or rejected, it goes back to the Boss for approval) and **Delete** (not once approved).
+- **Update job status** from time to time: Not started, Design, Printing, Finishing, Ready, Delivered, with a short note. Each update is kept with the time and does **not** need a new approval.
+- **Boss / Admin** see everyone's jobs. They **Approve** or **Reject** (with a reason), and once it is invoiced press **✓ Mark invoiced** (with the invoice number). They cannot change anyone's details.
+- **Weekly PDF** (Boss / Admin): pick the week and press **Download weekly PDF**. It lists every job of that Monday–Sunday with sizes, m², reason, job status, who made and approved it and **Invoiced YES / NO** (not invoiced rows are shaded red), a tick box per job, a signature line, and the screenshots at the end.
+
 ## Movements — everyone
 
 The full log: when, item, type, change, balance after, client · job · reason, and who.

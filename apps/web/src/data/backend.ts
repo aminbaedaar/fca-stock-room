@@ -23,6 +23,10 @@ export interface Backend {
   ai(messages: AiMessage[], snapshot: Snapshot, me: Member): Promise<AiReply>;
   writeSummary(snapshot: Snapshot, me: Member): Promise<void>;
   savePushSubscription?(sub: PushSubscription): Promise<void>;
+  /** Uploads a (shrunk) screenshot for a special job; returns where it is kept. */
+  uploadPhoto(photo: Blob): Promise<string>;
+  /** A link to show a saved screenshot (valid for a while). */
+  photoUrl(path: string): Promise<string>;
 }
 
 /** An error from the server about the request itself (not a lost connection). */

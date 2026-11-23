@@ -15,6 +15,7 @@ import { Team } from './pages/Team';
 import { Import } from './pages/Import';
 import { PrintSheet } from './pages/PrintSheet';
 import { Calculator } from './pages/Calculator';
+import { SpecialJobs } from './pages/SpecialJobs';
 
 /** Shows a desktop notification when a new Monday summary arrives. */
 function ReportWatcher() {
@@ -44,6 +45,7 @@ function Shell() {
       <Routes>
         <Route element={<Layout />}>
           <Route path="calculator" element={<Calculator />} />
+          <Route path="special-jobs" element={<SpecialJobs />} />
           <Route path="*" element={<Navigate to="/calculator" replace />} />
         </Route>
       </Routes>
@@ -59,6 +61,7 @@ function Shell() {
           <Route path="requests" element={<Requests />} />
           <Route path="calculator" element={<Calculator />} />
           <Route path="jobs" element={<Jobs />} />
+          <Route path="special-jobs" element={<SpecialJobs />} />
           {can(me.role, 'roles') && <Route path="team" element={<Team />} />}
           <Route path="import" element={<Import />} />
           <Route path="print" element={<PrintSheet />} />

@@ -57,6 +57,8 @@ docs/                setup guide and user guide
 | Action | Admin | Boss | Manager | Staff | Viewer |
 |---|---|---|---|---|---|
 | Use the job calculator (SQM & wastage, PDF report) | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Enter complimentary / no sales order jobs (own jobs only, with screenshots and job status) | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Approve those jobs, tick Invoiced, weekly PDF | ✓ | ✓ | | | |
 | See stock, movements, dashboard, AI assistant | ✓ | ✓ | ✓ | ✓ | – |
 | Request material for a job | ✓ | ✓ | ✓ | ✓ | – |
 | Stock in / stock out | ✓ | ✓ | ✓ | ✓ | – |

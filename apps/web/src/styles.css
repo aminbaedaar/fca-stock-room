@@ -388,3 +388,30 @@ td.actions { white-space: nowrap; text-align: right; }
   .sqm-tiles { grid-template-columns: repeat(4, 1fr); }
   .sqm-report .tile { border: 1px solid #999; box-shadow: none; }
 }
+
+/* Complimentary & no sales order jobs */
+.sj-list { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+.sj-card { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; background: var(--surface); display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sj-card.due { border-color: var(--out); box-shadow: inset 4px 0 0 var(--out); }
+.sj-top { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.sj-client { margin: 8px 0 4px; font-size: 1.05rem; overflow-wrap: anywhere; }
+.sj-sizes { line-height: 1.5; }
+.sj-stage { margin-top: 2px; }
+.sj-hist { margin: 4px 0 0; padding-left: 18px; }
+.sj-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.sj-lines { display: grid; gap: 6px; }
+.sj-line { display: grid; grid-template-columns: minmax(0, 2.2fr) repeat(3, minmax(0, 1fr)) 3.2em 2.2em; gap: 6px; align-items: center; }
+.sj-line.head span { padding-left: 2px; }
+.sj-line .num { text-align: right; }
+@media (max-width: 520px) {
+  .sj-list { grid-template-columns: 1fr; }
+  .sj-line { grid-template-columns: repeat(3, minmax(0, 1fr)) 2.8em 2em; }
+  .sj-line > input:first-child { grid-column: 1 / -1; }
+  .sj-line.head span:first-child { display: none; }
+}
+.sj-photos { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0; }
+.sj-thumb { position: relative; width: 76px; height: 76px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); background: var(--surface-2); padding: 0; display: inline-flex; align-items: center; justify-content: center; text-align: center; cursor: pointer; }
+.sj-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sj-add { border-style: dashed; color: var(--muted); }
+.sj-wait { cursor: default; }
+.sj-x { position: absolute; top: 3px; right: 3px; width: 22px; height: 22px; border-radius: 50%; border: 0; background: rgba(0, 0, 0, 0.65); color: #fff; font-size: 12px; line-height: 22px; padding: 0; cursor: pointer; }

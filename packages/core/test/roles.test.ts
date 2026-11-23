@@ -12,8 +12,8 @@ describe('permissions', () => {
     for (const r of ROLES) expect(can(r, 'calculator')).toBe(true);
   });
 
-  it('Viewers can use the calculator and nothing else', () => {
-    for (const p of Object.keys(PERMISSION_TABLE) as Permission[]) expect(can('viewer', p)).toBe(p === 'calculator');
+  it('Viewers can use the calculator and enter their own special jobs, nothing else', () => {
+    for (const p of Object.keys(PERMISSION_TABLE) as Permission[]) expect(can('viewer', p), p).toBe(p === 'calculator' || p === 'special');
   });
 
   it('staff can request and do stock in/out, but not edit items, approve or reverse', () => {
@@ -23,8 +23,15 @@ describe('permissions', () => {
       expect(can('staff', p)).toBe(false);
   });
 
-  it('boss has the same rights as manager', () => {
-    for (const p of Object.keys(PERMISSION_TABLE) as Permission[]) expect(can('boss', p)).toBe(can('manager', p));
+  it('boss has the same rights as manager, plus approving special jobs', () => {
+    for (const p of Object.keys(PERMISSION_TABLE) as Permission[]) if (p !== 'approve_special') expect(can('boss', p), p).toBe(can('manager', p));
+  });
+
+  it('only the Boss and Admin approve complimentary / no sales order jobs; everyone can enter one', () => {
+    for (const r of ROLES) {
+      expect(can(r, 'approve_special'), r).toBe(r === 'admin' || r === 'boss');
+      expect(can(r, 'special'), r).toBe(true);
+    }
   });
 
   it('managers and bosses can reverse movements', () => {
@@ -42,7 +49,7 @@ describe('permissions', () => {
 
   it('the database function fca_can uses the same table', () => {
     // the newest migration that redefines fca_can
-    const sql = readFileSync(new URL('../../../supabase/migrations/0007_team_and_reverse.sql', import.meta.url), 'utf8');
+    const sql = readFileSync(new URL('../../../supabase/migrations/0009_special_jobs.sql', import.meta.url), 'utf8');
     const block = /-- PERMISSIONS START([\s\S]*?)-- PERMISSIONS END/.exec(sql)?.[1] ?? '';
     for (const [perm, roles] of Object.entries(PERMISSION_TABLE)) {
       const m = new RegExp(`when '${perm}' then array\\[([^\\]]*)\\]`).exec(block);
