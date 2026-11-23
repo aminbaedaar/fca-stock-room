@@ -43,7 +43,7 @@ export type Op =
   | { kind: 'specialStage'; id: string; job_id: string; stage: SpecialStage; note: string; at: string }
   | { kind: 'decideSpecial'; id: string; job_id: string; approve: boolean; note: string }
   | { kind: 'invoiceSpecial'; id: string; job_id: string; invoiced: boolean; invoice_no: string }
-  | { kind: 'deleteSpecial'; id: string; job_id: string };
+  | { kind: 'deleteSpecial'; id: string; job_id: string; reason: string };
 
 export interface SpecialFields {
   kind: SpecialKind;

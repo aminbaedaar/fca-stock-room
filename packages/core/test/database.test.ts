@@ -48,7 +48,7 @@ let mesh: string;
 beforeAll(async () => {
   db = new PGlite();
   await db.exec(SHIM);
-  for (const f of ['0001_schema.sql', '0002_functions.sql', '0003_rls.sql', '0004_sqm.sql', '0005_calculator_role.sql', '0006_viewer_calculator_only.sql', '0007_team_and_reverse.sql', '0008_new_users_viewer.sql', '0009_special_jobs.sql']) await db.exec(migration(f));
+  for (const f of ['0001_schema.sql', '0002_functions.sql', '0003_rls.sql', '0004_sqm.sql', '0005_calculator_role.sql', '0006_viewer_calculator_only.sql', '0007_team_and_reverse.sql', '0008_new_users_viewer.sql', '0009_special_jobs.sql', '0010_special_jobs_deleted.sql']) await db.exec(migration(f));
   await db.exec('grant usage on schema public, auth to authenticated; grant select on all tables in schema public to authenticated;');
   for (const n of ['amin', 'stella', 'boss', 'mary', 'eric', 'carl']) await signUp(n);
   await db.query(`update members set role = 'staff' where user_id = $1`, [users.stella]);
@@ -314,12 +314,21 @@ describe('complimentary / no sales order jobs', () => {
   it('rejecting needs a reason; approved jobs cannot be deleted', async () => {
     await expect(as('boss', `select decide_special_job($1, false, '')`, [job])).rejects.toThrow(/why it is rejected/);
     await as('boss', `select decide_special_job($1, true, '')`, [job]);
-    await expect(as('eric', `select delete_special_job($1)`, [job])).rejects.toThrow(/cannot be deleted/);
+    await expect(as('eric', `select delete_special_job($1, 'No longer needed')`, [job])).rejects.toThrow(/cannot be deleted/);
     const other = randomUUID();
     await save('eric', other, 'Temp');
-    await expect(as('stella', `select delete_special_job($1)`, [other])).rejects.toThrow(/Only the person/);
-    await as('eric', `select delete_special_job($1)`, [other]);
-    expect((await as('eric', 'select id from special_jobs where id = $1', [other])).length).toBe(0);
+    await expect(as('stella', `select delete_special_job($1, 'Mistake')`, [other])).rejects.toThrow(/Only the person/);
+    await expect(as('eric', `select delete_special_job($1, '')`, [other])).rejects.toThrow(/why the job is deleted/);
+    const [d] = await as('eric', `select (delete_special_job($1, 'Entered twice')).*`, [other]);
+    expect(d).toMatchObject({ deleted: true, deleted_by_name: 'eric', delete_reason: 'Entered twice', client: 'Temp' });
+    // kept, with its details, for the person and the Boss
+    expect((await as('eric', 'select client from special_jobs where id = $1', [other]))[0].client).toBe('Temp');
+    expect((await as('boss', 'select delete_reason from special_jobs where id = $1', [other]))[0].delete_reason).toBe('Entered twice');
+    // a deleted job cannot be changed, approved or removed for real
+    await expect(save('eric', other, 'Back again')).rejects.toThrow(/deleted/);
+    await expect(as('boss', `select decide_special_job($1, true, '')`, [other])).rejects.toThrow(/deleted/);
+    await expect(as('eric', `select update_special_stage($1, 'printing', '', now())`, [other])).rejects.toThrow(/deleted/);
+    await expect(db.query('delete from special_jobs where id = $1', [other])).rejects.toThrow(/deleted/);
   });
 
   it('keeps up to 6 screenshots; changing them needs a new approval', async () => {

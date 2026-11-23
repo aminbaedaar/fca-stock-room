@@ -28,7 +28,7 @@ export function Layout() {
   });
   const navigate = useNavigate();
   const pendingRequests = data.requests.filter((r) => r.status === 'pending').length;
-  const pendingSpecial = can(me?.role, 'approve_special') ? data.specialJobs.filter((j) => j.status === 'pending').length : 0;
+  const pendingSpecial = can(me?.role, 'approve_special') ? data.specialJobs.filter((j) => j.status === 'pending' && !j.deleted).length : 0;
 
   useEffect(() => {
     applyTheme(theme);

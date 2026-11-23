@@ -142,6 +142,11 @@ export interface SpecialJob {
   created_by_name: string;
   created_at: string;
   updated_at: string;
+  /** Deleted jobs are kept, with who deleted them, when and why. */
+  deleted?: boolean;
+  deleted_at?: string | null;
+  deleted_by_name?: string;
+  delete_reason?: string;
 }
 
 /** Square metres of a job's sizes, to 2 decimals. */

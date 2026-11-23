@@ -178,7 +178,7 @@ export const supabaseBackend: Backend = {
       case 'invoiceSpecial':
         return rpc('set_special_invoiced', { p_job: op.job_id, p_invoiced: op.invoiced, p_invoice_no: op.invoice_no });
       case 'deleteSpecial':
-        return rpc('delete_special_job', { p_job: op.job_id });
+        return rpc('delete_special_job', { p_job: op.job_id, p_reason: op.reason });
     }
   },
 

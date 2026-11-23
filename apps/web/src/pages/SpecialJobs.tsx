@@ -7,7 +7,7 @@ import { saveFile } from '../lib/save';
 import { shrinkPhoto } from '../lib/photo';
 import { addDaysIso, buildSpecialPdf, sizesText, specialPdfName, weekStart } from '../lib/specialPdf';
 
-type Filter = 'pending' | 'notInvoiced' | 'invoiced' | 'rejected' | 'all';
+type Filter = 'pending' | 'notInvoiced' | 'invoiced' | 'rejected' | 'deleted' | 'all';
 type LineDraft = { material: string; w: string; h: string; qty: string };
 
 const STATUS_LABEL = { pending: 'Waiting for approval', approved: 'Approved', rejected: 'Rejected' } as const;
@@ -27,6 +27,7 @@ export function SpecialJobs() {
   const [week, setWeek] = useState(() => weekStart(kigaliDay()));
   const [busy, setBusy] = useState(false);
   const [viewing, setViewing] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<SpecialJob | null>(null);
 
   // People see their own jobs; the Boss and Admin see everyone's (the database does the same).
   const mine = useMemo(() => data.specialJobs.filter((j) => boss || j.created_by === me?.user_id), [data.specialJobs, boss, me?.user_id]);
@@ -38,10 +39,6 @@ export function SpecialJobs() {
 
   const approve = (j: SpecialJob) => {
     if (dispatch({ kind: 'decideSpecial', id: newId(), job_id: j.id, approve: true, note: '' })) toast(`Approved: ${j.client}`);
-  };
-  const remove = (j: SpecialJob) => {
-    if (!confirm(`Delete the job for ${j.client}? This cannot be undone.`)) return;
-    if (dispatch({ kind: 'deleteSpecial', id: newId(), job_id: j.id })) toast('Job deleted');
   };
   const pdf = async () => {
     setBusy(true);
@@ -101,6 +98,7 @@ export function SpecialJobs() {
                 ['notInvoiced', 'Approved, not invoiced'],
                 ['invoiced', 'Invoiced'],
                 ['rejected', 'Rejected'],
+                ['deleted', 'Deleted'],
                 ['all', 'All'],
               ] as [Filter, string][]
             ).map(([f, label]) => (
@@ -119,10 +117,17 @@ export function SpecialJobs() {
               const own = j.created_by === me.user_id;
               const last = j.updates[j.updates.length - 1];
               return (
-                <article key={j.id} className={`sj-card${j.status === 'approved' && !j.invoiced ? ' due' : ''}`}>
+                <article key={j.id} className={`sj-card${j.deleted ? ' gone' : j.status === 'approved' && !j.invoiced ? ' due' : ''}`}>
+                  {j.deleted && (
+                    <div className="sj-deleted small">
+                      <b>Deleted</b> by {j.deleted_by_name || 'someone'}
+                      {j.deleted_at && ` on ${fmtDateTime(j.deleted_at)}`}
+                      <div>Reason: {j.delete_reason}</div>
+                    </div>
+                  )}
                   <div className="sj-top">
                     <span className={`pill ${j.kind === 'complimentary' ? 'ok' : 'low'}`}>{SPECIAL_KINDS[j.kind]}</span>
-                    <span className={`pill ${j.status}`}>{STATUS_LABEL[j.status]}</span>
+                    {j.deleted ? <span className="pill out">Deleted</span> : <span className={`pill ${j.status}`}>{STATUS_LABEL[j.status]}</span>}
                     {j.status === 'approved' && <span className={`pill ${j.invoiced ? 'approved' : 'out'}`}>{j.invoiced ? `Invoiced${j.invoice_no ? ` · ${j.invoice_no}` : ''}` : 'Not invoiced'}</span>}
                     <span className="spacer" />
                     <span className="muted small">{sqmDate(j.job_date)}</span>
@@ -176,7 +181,7 @@ export function SpecialJobs() {
                     {j.decide_note && `: ${j.decide_note}`}
                     {j.invoiced && j.invoiced_by_name && ` · invoiced ticked by ${j.invoiced_by_name}`}
                   </div>
-                  <div className="sj-actions">
+                  {!j.deleted && <div className="sj-actions">
                     {own && (
                       <>
                         <button className="btn small" onClick={() => setStaging(j)}>
@@ -186,7 +191,7 @@ export function SpecialJobs() {
                           Edit
                         </button>
                         {j.status !== 'approved' && (
-                          <button className="btn small ghost" onClick={() => remove(j)}>
+                          <button className="btn small ghost" onClick={() => setDeleting(j)}>
                             Delete
                           </button>
                         )}
@@ -215,7 +220,7 @@ export function SpecialJobs() {
                           ✓ Mark invoiced
                         </button>
                       ))}
-                  </div>
+                  </div>}
                 </article>
               );
             })}
@@ -227,6 +232,17 @@ export function SpecialJobs() {
         <Modal title="Screenshot" onClose={() => setViewing(null)}>
           <Photo path={viewing} full />
         </Modal>
+      )}
+      {deleting && (
+        <NoteForm
+          title={`Delete: ${deleting.client}`}
+          label="Why are you deleting this job?"
+          button="Delete job"
+          danger
+          min={3}
+          onClose={() => setDeleting(null)}
+          onSave={(reason) => dispatch({ kind: 'deleteSpecial', id: newId(), job_id: deleting.id, reason }) && (toast('Job deleted: it is kept under Deleted with your reason'), true)}
+        />
       )}
       {editing && <JobForm job={editing === 'new' ? null : editing} onClose={() => setEditing(null)} />}
       {staging && <StageForm job={staging} onClose={() => setStaging(null)} />}
@@ -257,6 +273,7 @@ export function SpecialJobs() {
 
 function match(j: SpecialJob, f: Filter) {
   if (f === 'all') return true;
+  if (f === 'deleted' || j.deleted) return f === 'deleted' && !!j.deleted;
   if (f === 'pending' || f === 'rejected') return j.status === f;
   return j.status === 'approved' && j.invoiced === (f === 'invoiced');
 }

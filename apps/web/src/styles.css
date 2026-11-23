@@ -415,3 +415,5 @@ td.actions { white-space: nowrap; text-align: right; }
 .sj-add { border-style: dashed; color: var(--muted); }
 .sj-wait { cursor: default; }
 .sj-x { position: absolute; top: 3px; right: 3px; width: 22px; height: 22px; border-radius: 50%; border: 0; background: rgba(0, 0, 0, 0.65); color: #fff; font-size: 12px; line-height: 22px; padding: 0; cursor: pointer; }
+.sj-card.gone { opacity: 0.85; border-style: dashed; }
+.sj-deleted { background: var(--out-bg, #fde8ea); color: var(--out); border-radius: 6px; padding: 6px 8px; margin-bottom: 6px; }

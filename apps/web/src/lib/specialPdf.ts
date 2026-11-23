@@ -114,14 +114,15 @@ export async function buildSpecialPdf(jobs: SpecialJob[], monday: string, madeBy
   band(27, 0.7, M, PW - M);
 
   // summary tiles
-  const approved = list.filter((j) => j.status === 'approved');
+  const live = list.filter((j) => !j.deleted);
+  const approved = live.filter((j) => j.status === 'approved');
   const tiles: [string, string, RGB][] = [
     ['Jobs this week', String(list.length), PURPLE],
     ['Approved', String(approved.length), PURPLE],
-    ['Waiting / rejected', `${list.filter((j) => j.status === 'pending').length} / ${list.filter((j) => j.status === 'rejected').length}`, MUT],
+    ['Waiting / rejected / deleted', `${live.filter((j) => j.status === 'pending').length} / ${live.filter((j) => j.status === 'rejected').length} / ${list.length - live.length}`, MUT],
     ['Invoiced', String(approved.filter((j) => j.invoiced).length), GREEN],
     ['NOT invoiced', String(approved.filter((j) => !j.invoiced).length), RED],
-    ['Total SQM', f2(list.reduce((t, j) => t + j.sqm, 0)), PURPLE],
+    ['Total SQM (not deleted)', f2(live.reduce((t, j) => t + j.sqm, 0)), PURPLE],
   ];
   const tw = (PW - 2 * M - 5 * 3) / 6;
   tiles.forEach(([label, value, colour], i) => {
@@ -139,8 +140,10 @@ export async function buildSpecialPdf(jobs: SpecialJob[], monday: string, madeBy
   });
 
   const statusTxt = (j: SpecialJob) =>
-    j.status === 'approved' ? `Approved\n${j.decided_by_name}` : j.status === 'rejected' ? `Rejected\n${j.decided_by_name}${j.decide_note ? `: ${j.decide_note}` : ''}` : 'Waiting for approval';
-  const invTxt = (j: SpecialJob) => (j.status !== 'approved' ? '–' : j.invoiced ? `YES${j.invoice_no ? `\n${j.invoice_no}` : ''}` : 'NO');
+    j.deleted
+      ? `DELETED by ${j.deleted_by_name}${j.deleted_at ? ` ${sqmDate(j.deleted_at.slice(0, 10))}` : ''}\nReason: ${j.delete_reason}`
+      : j.status === 'approved' ? `Approved\n${j.decided_by_name}` : j.status === 'rejected' ? `Rejected\n${j.decided_by_name}${j.decide_note ? `: ${j.decide_note}` : ''}` : 'Waiting for approval';
+  const invTxt = (j: SpecialJob) => (j.deleted || j.status !== 'approved' ? '–' : j.invoiced ? `YES${j.invoice_no ? `\n${j.invoice_no}` : ''}` : 'NO');
 
   autoTable(doc, {
     startY: 50,
@@ -183,6 +186,11 @@ export async function buildSpecialPdf(jobs: SpecialJob[], monday: string, madeBy
     didParseCell: (d) => {
       if (d.section !== 'body' || !list.length) return;
       const j = list[d.row.index];
+      if (j.deleted) {
+        d.cell.styles.fillColor = [238, 236, 238];
+        d.cell.styles.textColor = d.column.index === 9 ? RED : MUT;
+        return;
+      }
       if (d.column.index === 10 && j.status === 'approved') d.cell.styles.textColor = j.invoiced ? GREEN : RED;
       if (j.status === 'approved' && !j.invoiced) d.cell.styles.fillColor = [253, 236, 234];
       if (j.status !== 'approved') d.cell.styles.textColor = d.column.index === 10 ? MUT : d.cell.styles.textColor;

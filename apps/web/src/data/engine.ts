@@ -270,6 +270,7 @@ export function applyOp(s: Snapshot, op: Op, me: Member): Snapshot {
         };
         return { ...s, specialJobs: [job, ...s.specialJobs] };
       }
+      if (old.deleted) throw new OpError('This job was deleted and cannot be changed.');
       if (old.created_by !== me.user_id) throw new OpError('Only the person who made this job can change it.');
       const same = JSON.stringify([old.kind, old.client, old.job, old.job_date, old.lines, old.reason, old.photos ?? []]) === JSON.stringify([fields.kind, fields.client, fields.job, fields.job_date, fields.lines, fields.reason, fields.photos]);
       if (same) return s;
@@ -281,6 +282,7 @@ export function applyOp(s: Snapshot, op: Op, me: Member): Snapshot {
       require(me, 'special');
       const old = s.specialJobs.find((j) => j.id === op.job_id);
       if (!old) throw new OpError('Job not found.');
+      if (old.deleted) throw new OpError('This job was deleted and cannot be changed.');
       if (old.created_by !== me.user_id) throw new OpError('Only the person who made this job can update it.');
       const at = op.at < new Date().toISOString() ? op.at : new Date().toISOString();
       if (old.updates.some((u) => u.at === at)) return s;
@@ -292,6 +294,7 @@ export function applyOp(s: Snapshot, op: Op, me: Member): Snapshot {
       require(me, 'approve_special');
       const old = s.specialJobs.find((j) => j.id === op.job_id);
       if (!old) throw new OpError('Job not found.');
+      if (old.deleted) throw new OpError('This job was deleted and cannot be changed.');
       if (old.status !== 'pending') {
         if (old.status === (op.approve ? 'approved' : 'rejected')) return s;
         throw new OpError(`This job was already ${old.status}.`);
@@ -305,6 +308,7 @@ export function applyOp(s: Snapshot, op: Op, me: Member): Snapshot {
       require(me, 'approve_special');
       const old = s.specialJobs.find((j) => j.id === op.job_id);
       if (!old) throw new OpError('Job not found.');
+      if (old.deleted) throw new OpError('This job was deleted and cannot be changed.');
       if (old.status !== 'approved') throw new OpError('Only approved jobs can be marked invoiced.');
       const job: SpecialJob = op.invoiced
         ? { ...old, invoiced: true, invoice_no: clean(op.invoice_no, 60), invoiced_by_name: nameOf(me), invoiced_at: new Date().toISOString() }
@@ -315,10 +319,14 @@ export function applyOp(s: Snapshot, op: Op, me: Member): Snapshot {
     case 'deleteSpecial': {
       require(me, 'special');
       const old = s.specialJobs.find((j) => j.id === op.job_id);
-      if (!old) return s;
+      if (!old) throw new OpError('Job not found.');
       if (old.created_by !== me.user_id) throw new OpError('Only the person who made this job can delete it.');
+      if (old.deleted) return s;
       if (old.status === 'approved') throw new OpError('An approved job cannot be deleted.');
-      return { ...s, specialJobs: s.specialJobs.filter((j) => j.id !== op.job_id) };
+      const reason = clean(op.reason, 300);
+      if (reason.length < 3) throw new OpError('Please write why the job is deleted.');
+      const job: SpecialJob = { ...old, deleted: true, deleted_at: new Date().toISOString(), deleted_by_name: nameOf(me), delete_reason: reason };
+      return { ...s, specialJobs: s.specialJobs.map((j) => (j.id === job.id ? job : j)) };
     }
 
     case 'import': {
