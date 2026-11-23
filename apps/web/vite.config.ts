@@ -9,7 +9,9 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // The app itself decides when to switch to a new version (see src/lib/pwaUpdate.ts).
+      registerType: 'prompt',
+      injectRegister: false,
       disable: isTauri,
       includeAssets: ['logo-mark.png', 'logo-full.png'],
       manifest: {
