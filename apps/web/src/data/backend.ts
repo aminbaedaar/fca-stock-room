@@ -24,10 +24,13 @@ export interface Backend {
   writeSummary(snapshot: Snapshot, me: Member): Promise<void>;
   savePushSubscription?(sub: PushSubscription): Promise<void>;
   /** Uploads a (shrunk) screenshot for a special job; returns where it is kept. */
-  uploadPhoto(photo: Blob): Promise<string>;
+  uploadPhoto(photo: Blob, bucket?: FileBucket): Promise<string>;
   /** A link to show a saved screenshot (valid for a while). */
-  photoUrl(path: string): Promise<string>;
+  photoUrl(path: string, bucket?: FileBucket): Promise<string>;
 }
+
+/** special-jobs: complimentary / no SO screenshots; so-jobs: sales order and artwork files (photos, PDFs). */
+export type FileBucket = 'special-jobs' | 'so-jobs';
 
 /** An error from the server about the request itself (not a lost connection). */
 export class ServerError extends Error {}

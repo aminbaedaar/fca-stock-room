@@ -119,6 +119,55 @@ export interface SpecialUpdate {
   by: string;
 }
 
+// Sales order jobs: followed step by step until delivered.
+export const SO_STEPS = {
+  artwork: 'Artwork shared',
+  sample: 'Sample',
+  sample_ok: 'Sample approved',
+  production: 'Production',
+  delivery: 'Delivery',
+  done: 'Finished',
+} as const;
+export type SoStep = keyof typeof SO_STEPS;
+export const SO_TASKS = {
+  printing: 'Printing',
+  cutting: 'Cutting',
+  print_cut: 'Print & cut',
+  plotting: 'Plotting',
+  lamination: 'Lamination',
+  mounting: 'Mounting / fixing',
+  other: 'Other',
+} as const;
+export type SoTask = keyof typeof SO_TASKS;
+export interface SoTaskState { task: SoTask; done: boolean; by: string; at: string | null }
+export interface SoUpdate { at: string; step: SoStep; note: string; by: string }
+export interface SoJob {
+  id: string;
+  so_number: string;
+  client: string;
+  job: string;
+  due_date: string | null;
+  sample: boolean; // false = straight to printing
+  tasks: SoTaskState[];
+  files: string[];
+  notes: string;
+  step: SoStep;
+  delivery_note: string;
+  updates: SoUpdate[];
+  cancelled: boolean;
+  cancelled_at: string | null;
+  cancelled_by_name: string;
+  cancel_reason: string;
+  created_by: string | null;
+  created_by_name: string;
+  created_at: string;
+  updated_at: string;
+}
+/** The steps a job goes through (without the sample steps when it goes straight to printing). */
+export function soSteps(sample: boolean): SoStep[] {
+  return (Object.keys(SO_STEPS) as SoStep[]).filter((s) => sample || (s !== 'sample' && s !== 'sample_ok'));
+}
+
 export interface SpecialJob {
   id: string;
   kind: SpecialKind;

@@ -48,7 +48,7 @@ let mesh: string;
 beforeAll(async () => {
   db = new PGlite();
   await db.exec(SHIM);
-  for (const f of ['0001_schema.sql', '0002_functions.sql', '0003_rls.sql', '0004_sqm.sql', '0005_calculator_role.sql', '0006_viewer_calculator_only.sql', '0007_team_and_reverse.sql', '0008_new_users_viewer.sql', '0009_special_jobs.sql', '0010_special_jobs_deleted.sql', '0011_approve_new_members.sql', '0012_catch_up_live.sql']) await db.exec(migration(f));
+  for (const f of ['0001_schema.sql', '0002_functions.sql', '0003_rls.sql', '0004_sqm.sql', '0005_calculator_role.sql', '0006_viewer_calculator_only.sql', '0007_team_and_reverse.sql', '0008_new_users_viewer.sql', '0009_special_jobs.sql', '0010_special_jobs_deleted.sql', '0011_approve_new_members.sql', '0012_catch_up_live.sql', '0013_sales_order_jobs.sql']) await db.exec(migration(f));
   await db.exec('grant usage on schema public, auth to authenticated; grant select on all tables in schema public to authenticated;');
   for (const n of ['amin', 'stella', 'boss', 'mary', 'eric', 'carl']) await signUp(n);
   for (const n of ['stella', 'boss', 'mary', 'eric', 'carl']) await as('amin', 'select approve_member($1, true)', [users[n]]);
@@ -360,5 +360,65 @@ describe('complimentary / no sales order jobs', () => {
 
   it('nobody can write the table directly', async () => {
     await expect(as('amin', `update special_jobs set invoiced = false`)).rejects.toThrow(/permission denied/);
+  });
+});
+
+describe('sales order jobs', () => {
+  const save = (who: string, id: string, sample = true, tasks = '["printing","cutting"]', client = 'Bralirwa') =>
+    as(who, `select * from save_so_job($1, 'SO-1042', $2, 'Shop front', '2026-12-01', $3, $4::jsonb, '[]', '')`, [id, client, sample, tasks]);
+  const step = (who: string, id: string, s: string, dn = '') =>
+    as(who, `select * from so_job_step($1, $2, '', $3, clock_timestamp())`, [id, s, dn]);
+  let job: string;
+
+  it('anyone, a Viewer too, adds a job; it starts at Artwork shared; everyone sees it', async () => {
+    job = randomUUID();
+    const [row] = await save('eric', job);
+    expect(row).toMatchObject({ step: 'artwork', so_number: 'SO-1042', created_by_name: 'eric' });
+    expect(row.tasks.map((t: any) => t.task)).toEqual(['printing', 'cutting']);
+    expect((await as('stella', 'select id from so_jobs')).length).toBe(1);
+    await expect(as('eric', `select save_so_job($1, '', 'X', '', null, true, '[]', '[]', '')`, [randomUUID()])).rejects.toThrow(/sales order number/);
+  });
+
+  it('anyone moves it on and ticks production tasks; history keeps who', async () => {
+    await step('stella', job, 'sample');
+    await step('mary', job, 'sample_ok');
+    await step('stella', job, 'production');
+    const [t] = await as('stella', `select * from so_job_task($1, 'printing', true)`, [job]);
+    expect(t.tasks[0]).toMatchObject({ task: 'printing', done: true, by: 'stella' });
+    await expect(as('stella', `select so_job_task($1, 'plotting', true)`, [job])).rejects.toThrow(/no such task/);
+    const [r] = await step('stella', job, 'delivery');
+    expect(r.updates.map((u: any) => u.step)).toEqual(['artwork', 'sample', 'sample_ok', 'production', 'delivery']);
+    expect(r.updates[2].by).toBe('mary');
+  });
+
+  it('finishing needs the delivery note number', async () => {
+    await expect(step('stella', job, 'done')).rejects.toThrow(/delivery note/);
+    const [r] = await step('stella', job, 'done', 'DN-889');
+    expect(r).toMatchObject({ step: 'done', delivery_note: 'DN-889' });
+  });
+
+  it('straight-to-printing jobs skip the sample steps', async () => {
+    const id = randomUUID();
+    await save('stella', id, false);
+    await expect(step('stella', id, 'sample')).rejects.toThrow(/straight to printing/);
+    expect((await step('stella', id, 'production'))[0].step).toBe('production');
+  });
+
+  it('only the maker or a Manager edits details or cancels; editing keeps ticked tasks', async () => {
+    await expect(save('stella', job, true, '["printing","cutting"]', 'Changed')).rejects.toThrow(/Only the person who made/);
+    const [r] = await save('mary', job, true, '["printing","lamination"]', 'Bralirwa Ltd');
+    expect(r.client).toBe('Bralirwa Ltd');
+    expect(r.tasks).toEqual([expect.objectContaining({ task: 'printing', done: true }), expect.objectContaining({ task: 'lamination', done: false })]);
+    await expect(as('stella', `select cancel_so_job($1, 'wrong')`, [job])).rejects.toThrow(/Only the person who made/);
+    await expect(as('eric', `select cancel_so_job($1, '')`, [job])).rejects.toThrow(/why/);
+    const [c] = await as('eric', `select * from cancel_so_job($1, 'Client cancelled')`, [job]);
+    expect(c).toMatchObject({ cancelled: true, cancel_reason: 'Client cancelled', cancelled_by_name: 'eric' });
+    await expect(step('eric', job, 'production')).rejects.toThrow(/cancelled/);
+  });
+
+  it('new accounts waiting for approval see nothing; nobody writes the table directly', async () => {
+    await signUp('so_stranger');
+    expect((await as('so_stranger', 'select count(*)::int n from so_jobs'))[0].n).toBe(0);
+    await expect(as('amin', `update so_jobs set step = 'done'`)).rejects.toThrow(/permission denied/);
   });
 });

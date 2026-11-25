@@ -30,13 +30,13 @@ function initial(): Snapshot {
     created_at: now,
     updated_at: now,
   })) as Item[];
-  return { items, moves: [], requests: [], reports: [], members: DEMO_MEMBERS, sqmMaterials: FCA_SQM_MATERIALS, specialJobs: [] };
+  return { items, moves: [], requests: [], reports: [], members: DEMO_MEMBERS, sqmMaterials: FCA_SQM_MATERIALS, specialJobs: [], soJobs: [] };
 }
 
 function read(): Snapshot {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return { sqmMaterials: FCA_SQM_MATERIALS, specialJobs: [], ...JSON.parse(raw) };
+    if (raw) return { sqmMaterials: FCA_SQM_MATERIALS, specialJobs: [], soJobs: [], ...JSON.parse(raw) };
   } catch {
     /* fall through */
   }

@@ -17,6 +17,7 @@ import { PrintSheet } from './pages/PrintSheet';
 import { Calculator } from './pages/Calculator';
 import { SpecialJobs } from './pages/SpecialJobs';
 import { WaitingApproval } from './pages/WaitingApproval';
+import { SoJobs } from './pages/SoJobs';
 
 /** Shows a desktop notification when a new Monday summary arrives. */
 function ReportWatcher() {
@@ -50,6 +51,7 @@ function Shell() {
           <Route path="complimentary" element={<SpecialJobs key="c" kind="complimentary" />} />
           <Route path="no-sales-order" element={<SpecialJobs key="n" kind="no_sales_order" />} />
           <Route path="special-jobs" element={<Navigate to="/complimentary" replace />} />
+          <Route path="so-jobs" element={<SoJobs />} />
           <Route path="*" element={<Navigate to="/calculator" replace />} />
         </Route>
       </Routes>
@@ -68,6 +70,7 @@ function Shell() {
           <Route path="complimentary" element={<SpecialJobs key="c" kind="complimentary" />} />
           <Route path="no-sales-order" element={<SpecialJobs key="n" kind="no_sales_order" />} />
           <Route path="special-jobs" element={<Navigate to="/complimentary" replace />} />
+          <Route path="so-jobs" element={<SoJobs />} />
           {can(me.role, 'roles') && <Route path="team" element={<Team />} />}
           <Route path="import" element={<Import />} />
           <Route path="print" element={<PrintSheet />} />

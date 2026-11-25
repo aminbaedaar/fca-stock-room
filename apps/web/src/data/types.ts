@@ -1,4 +1,4 @@
-import type { Category, Count, Item, Member, Move, Report, Role, SpecialJob, SpecialKind, SpecialLine, SpecialStage, SqmMaterial, StockRequest, Unit } from '@fca/core';
+import type { Category, Count, Item, Member, Move, Report, Role, SoJob, SoStep, SoTask, SpecialJob, SpecialKind, SpecialLine, SpecialStage, SqmMaterial, StockRequest, Unit } from '@fca/core';
 
 export interface Snapshot {
   items: Item[];
@@ -8,9 +8,10 @@ export interface Snapshot {
   members: Member[];
   sqmMaterials: SqmMaterial[]; // job calculator materials
   specialJobs: SpecialJob[]; // complimentary / no sales order jobs, newest first
+  soJobs: SoJob[]; // sales order jobs, newest first
 }
 
-export const emptySnapshot = (): Snapshot => ({ items: [], moves: [], requests: [], reports: [], members: [], sqmMaterials: [], specialJobs: [] });
+export const emptySnapshot = (): Snapshot => ({ items: [], moves: [], requests: [], reports: [], members: [], sqmMaterials: [], specialJobs: [], soJobs: [] });
 
 export interface ItemFields {
   name: string;
@@ -44,7 +45,22 @@ export type Op =
   | { kind: 'specialStage'; id: string; job_id: string; stage: SpecialStage; note: string; at: string }
   | { kind: 'decideSpecial'; id: string; job_id: string; approve: boolean; note: string }
   | { kind: 'invoiceSpecial'; id: string; job_id: string; invoiced: boolean; invoice_no: string }
-  | { kind: 'deleteSpecial'; id: string; job_id: string; reason: string };
+  | { kind: 'deleteSpecial'; id: string; job_id: string; reason: string }
+  | { kind: 'saveSo'; id: string; job_id: string; fields: SoFields }
+  | { kind: 'soStep'; id: string; job_id: string; step: SoStep; note: string; delivery_note: string; at: string }
+  | { kind: 'soTask'; id: string; job_id: string; task: SoTask; done: boolean }
+  | { kind: 'cancelSo'; id: string; job_id: string; reason: string };
+
+export interface SoFields {
+  so_number: string;
+  client: string;
+  job: string;
+  due_date: string | null;
+  sample: boolean;
+  tasks: SoTask[];
+  files: string[];
+  notes: string;
+}
 
 export interface SpecialFields {
   kind: SpecialKind;

@@ -123,7 +123,7 @@ The SQM & Wastage Calculator is part of the Stock Room, with everything it had b
    - **Quick add:** type or paste items into the box under the items, one per line, e.g. `Banner, 2x3m - 12 pcs` or `Window sticker 90 x 120 cm 4 pcs`. You can also paste cells copied from Excel (name, width, height, quantity). Check the green preview, then press **Enter** or **Add items**. Lines without a size stay in the box.
    - **Import pictures…** (or drag files onto a location): the print size is read from PDF, Illustrator, EPS and SVG files, and from JPG/PNG/TIFF files that have a print size (dpi). Pictures without a print size come in with an empty size for you to type.
    - If an item's name says a different material than the one chosen (e.g. "Clear sticker" set to Glossy Sticker), a **Move it to…** button fixes it.
-3. **Material use** under each location shows the roll width chosen (and the other widths tried), running metres, total and wastage.
+3. The material list shows names only (e.g. *Glossy Sticker*): you just give your sizes and the calculator picks the roll width or sheet with the least wastage. **Material use** under each location shows the roll width chosen (and the other widths tried), running metres, total and wastage.
 4. On the right: **Stock to pull** (which stock item and how much is in stock) and a **preview of the report**, exactly as the PDF will look.
 5. **Download PDF report** saves the two-page First Choice report: job details, summary, summary by item, notes, and *Material to pull from stock*.
 6. **Open PDF report** opens a report made by the job calculator (or by the old SQM & Wastage Calculator) so you can change the job. **Undo** puts back the job you had before.
@@ -134,6 +134,19 @@ The SQM & Wastage Calculator is part of the Stock Room, with everything it had b
 The job you are working on is kept on your device until you press **New job**.
 
 ---
+
+## Sales order jobs — everyone
+
+Follow every job that has a sales order, from artwork to delivery.
+
+1. **+ New job**: sales order number, client, the job, due date. Choose **Sample first** or **Straight to printing**, tick the production work it needs (Printing, Cutting, Print & cut, Plotting, Lamination, Mounting / fixing, Other) and add photos or PDFs of the sales order and artwork (up to 10; on a phone you can take a photo).
+2. The job moves through **Artwork shared → Sample → Sample approved → Production → Delivery → Finished** (no sample steps when it goes straight to printing). Press **Move to: …** for the next step, or **Update / change step** to pick any step or just add a note.
+3. In production, tap each task when it is done (✓ Printing, ✓ Cutting …). It records who and when.
+4. **Finished** needs the **delivery note number**.
+
+The tiles at the top count the jobs at each step and the **Late** ones (due date passed, not finished); tap a tile to see those jobs. Use the chips for *Not finished*, *Finished*, *Cancelled* or *All*, and search by SO number, client or job. Every change is kept in the job's **History**.
+
+Anyone can add jobs and move them on. Only the person who added a job, or a Manager / Boss / Admin, can edit its details or **cancel** it (a reason is required; cancelled jobs are kept).
 
 ## Complimentary & no sales order jobs — everyone (approval: Boss or Admin)
 

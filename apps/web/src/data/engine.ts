@@ -1,4 +1,4 @@
-import { can, itemLabel, kigaliDay, round, specialSqm, type Item, type Member, type Move, type Permission, type SpecialJob } from '@fca/core';
+import { can, itemLabel, kigaliDay, round, SO_TASKS, specialSqm, type Item, type Member, type Move, type Permission, type SoJob, type SoTask, type SpecialJob } from '@fca/core';
 import { fmtDate } from '@fca/core';
 import type { Op, Snapshot } from './types';
 
@@ -337,6 +337,72 @@ export function applyOp(s: Snapshot, op: Op, me: Member): Snapshot {
       if (reason.length < 3) throw new OpError('Please write why the job is deleted.');
       const job: SpecialJob = { ...old, deleted: true, deleted_at: new Date().toISOString(), deleted_by_name: nameOf(me), delete_reason: reason };
       return { ...s, specialJobs: s.specialJobs.map((j) => (j.id === job.id ? job : j)) };
+    }
+
+    case 'saveSo': {
+      require(me, 'special');
+      const f = op.fields;
+      const so_number = clean(f.so_number, 60);
+      const client = clean(f.client, 120);
+      if (!so_number) throw new OpError('Enter the sales order number.');
+      if (!client) throw new OpError('Enter the client name.');
+      if (f.files.length > 10) throw new OpError('At most 10 files per job.');
+      const old = s.soJobs.find((j) => j.id === op.job_id);
+      const names = [...new Set(f.tasks)];
+      if (names.some((t) => !(t in SO_TASKS))) throw new OpError('Unknown production task.');
+      const tasks = names.map((t: SoTask) => old?.tasks.find((x) => x.task === t) ?? { task: t, done: false, by: '', at: null });
+      const fields = { so_number, client, job: clean(f.job, 200), due_date: f.due_date || null, sample: f.sample, tasks, files: [...f.files], notes: clean(f.notes, 1000) };
+      const now = new Date().toISOString();
+      if (!old) {
+        const job: SoJob = {
+          id: op.job_id, ...fields, step: 'artwork', delivery_note: '', updates: [{ at: now, step: 'artwork', note: 'Job added', by: nameOf(me) }],
+          cancelled: false, cancelled_at: null, cancelled_by_name: '', cancel_reason: '',
+          created_by: me.user_id, created_by_name: nameOf(me), created_at: now, updated_at: now,
+        };
+        return { ...s, soJobs: [job, ...s.soJobs] };
+      }
+      if (old.cancelled) throw new OpError('This job was cancelled and cannot be changed.');
+      if (old.created_by !== me.user_id && !can(me.role, 'approve')) throw new OpError('Only the person who made this job or a Manager can change its details.');
+      if (!f.sample && (old.step === 'sample' || old.step === 'sample_ok')) throw new OpError('This job is at the sample step. Move it on first.');
+      return { ...s, soJobs: s.soJobs.map((j) => (j.id === old.id ? { ...old, ...fields, updated_at: now } : j)) };
+    }
+
+    case 'soStep': {
+      require(me, 'special');
+      const old = s.soJobs.find((j) => j.id === op.job_id);
+      if (!old) throw new OpError('Job not found.');
+      if (old.cancelled) throw new OpError('This job was cancelled and cannot be changed.');
+      const at = op.at < new Date().toISOString() ? op.at : new Date().toISOString();
+      if (old.updates.some((u) => u.at === at)) return s;
+      if (!old.sample && (op.step === 'sample' || op.step === 'sample_ok')) throw new OpError('This job goes straight to printing (no sample). Edit the job to add a sample.');
+      const dn = clean(op.delivery_note, 60) || old.delivery_note;
+      if (op.step === 'done' && !dn) throw new OpError('Enter the delivery note number to finish the job.');
+      const job: SoJob = { ...old, step: op.step, delivery_note: dn, updates: [...old.updates, { at, step: op.step, note: clean(op.note, 300), by: nameOf(me) }], updated_at: new Date().toISOString() };
+      return { ...s, soJobs: s.soJobs.map((j) => (j.id === job.id ? job : j)) };
+    }
+
+    case 'soTask': {
+      require(me, 'special');
+      const old = s.soJobs.find((j) => j.id === op.job_id);
+      if (!old) throw new OpError('Job not found.');
+      if (old.cancelled) throw new OpError('This job was cancelled and cannot be changed.');
+      const t = old.tasks.find((x) => x.task === op.task);
+      if (!t) throw new OpError('This job has no such task.');
+      if (t.done === op.done) return s;
+      const tasks = old.tasks.map((x) => (x.task === op.task ? { task: op.task, done: op.done, by: op.done ? nameOf(me) : '', at: op.done ? new Date().toISOString() : null } : x));
+      return { ...s, soJobs: s.soJobs.map((j) => (j.id === old.id ? { ...old, tasks, updated_at: new Date().toISOString() } : j)) };
+    }
+
+    case 'cancelSo': {
+      require(me, 'special');
+      const old = s.soJobs.find((j) => j.id === op.job_id);
+      if (!old) throw new OpError('Job not found.');
+      if (old.cancelled) return s;
+      if (old.created_by !== me.user_id && !can(me.role, 'approve')) throw new OpError('Only the person who made this job or a Manager can cancel it.');
+      const reason = clean(op.reason, 300);
+      if (reason.length < 3) throw new OpError('Please write why the job is cancelled.');
+      const job: SoJob = { ...old, cancelled: true, cancelled_at: new Date().toISOString(), cancelled_by_name: nameOf(me), cancel_reason: reason };
+      return { ...s, soJobs: s.soJobs.map((j) => (j.id === job.id ? job : j)) };
     }
 
     case 'import': {

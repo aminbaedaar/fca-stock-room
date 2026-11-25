@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { can, ROLE_LABELS } from '@fca/core';
+import { can, kigaliDay, ROLE_LABELS } from '@fca/core';
 import { backend, useStore } from '../data/store';
 import { resetDemo } from '../data/demo';
 import { enablePush } from '../lib/notify';
@@ -49,13 +49,16 @@ export function Layout() {
   if (!me) return null;
 
   const seesStock = can(me.role, 'view');
-  const links: [string, string, number?][] = !seesStock ? [['/calculator', t('nav.calculator')], ['/complimentary', t('nav.complimentary')], ['/no-sales-order', t('nav.noSalesOrder')]] : [
+  const today = kigaliDay();
+  const lateSo = data.soJobs.filter((j) => !j.cancelled && j.step !== 'done' && !!j.due_date && j.due_date < today).length;
+  const links: [string, string, number?][] = !seesStock ? [['/calculator', t('nav.calculator')], ['/so-jobs', t('nav.soJobs'), lateSo], ['/complimentary', t('nav.complimentary')], ['/no-sales-order', t('nav.noSalesOrder')]] : [
     ['/', t('nav.dashboard')],
     ['/stock', t('nav.stock')],
     ['/movements', t('nav.movements')],
     ['/requests', t('nav.requests'), pendingRequests],
     ['/calculator', t('nav.calculator')],
     ['/jobs', t('nav.jobs')],
+    ['/so-jobs', t('nav.soJobs'), lateSo],
     ['/complimentary', t('nav.complimentary'), pendingSpecial('complimentary')],
     ['/no-sales-order', t('nav.noSalesOrder'), pendingSpecial('no_sales_order')],
     ...(can(me.role, 'roles') ? [['/team', t('nav.team'), data.members.filter((m) => m.approved === false).length] as [string, string, number]] : []),

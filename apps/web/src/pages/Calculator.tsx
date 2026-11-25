@@ -8,7 +8,6 @@ import {
   itemLabel,
   kigaliDay,
   materialFor,
-  matSize,
   mTrim,
   parseItemsText,
   sqmBleedTxt,
@@ -477,7 +476,8 @@ export function Calculator() {
                               </div>
                               <select value={it.mat} aria-label="Material" onChange={(e) => setItem(L.id, it.id, { mat: e.target.value })}>
                                 {!materials.some((m) => m.id === it.mat) && <option value={it.mat}>Pick a material</option>}
-                                {materials.map((m) => <option key={m.id} value={m.id}>{m.name} ({matSize(m)})</option>)}
+                                {/* Names only: people give their sizes, the calculator picks the roll width / sheet with the least wastage. */}
+                                {materials.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
                               </select>
                               <input type="number" inputMode="decimal" min="0" step="any" placeholder="W" aria-label="Width in cm" value={it.w} onChange={(e) => setItem(L.id, it.id, { w: e.target.value, ...clearNote })} />
                               <input type="number" inputMode="decimal" min="0" step="any" placeholder="H" aria-label="Height in cm" value={it.h} onChange={(e) => setItem(L.id, it.id, { h: e.target.value, ...clearNote })} />
