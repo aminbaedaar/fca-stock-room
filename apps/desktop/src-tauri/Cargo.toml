@@ -1,6 +1,6 @@
 [package]
 name = "fca-stock-room"
-version = "1.4.0"
+version = "1.5.0"
 description = "FCA Stock Room"
 authors = ["First Choice Africa Limited"]
 edition = "2021"
