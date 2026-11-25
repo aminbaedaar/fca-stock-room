@@ -17,7 +17,7 @@ export function Team() {
   };
   const approve = (m: Member, ok: boolean) => {
     if (!ok && !confirm(`Block ${m.name || m.email}? They will not be able to use the app until you approve them again.`)) return;
-    if (dispatch({ kind: 'approveMember', id: newId(), user_id: m.user_id, approve: ok })) toast(ok ? `${m.name || m.email} can now use the app` : `${m.name || m.email} is blocked`);
+    if (dispatch({ kind: 'approveMember', id: newId(), user_id: m.user_id, approve: ok })) toast(ok ? `${m.name || m.email} is now ${ROLE_LABELS[m.role]}` : `${m.name || m.email} is blocked`);
   };
 
   return (
@@ -31,8 +31,8 @@ export function Team() {
       {isAdmin && waiting.length > 0 && (
         <section className="card" style={{ marginBottom: 16, borderColor: 'var(--warn, #d97706)' }}>
           <div className="card-head">
-            <h2>Waiting for approval ({waiting.length})</h2>
-            <span className="muted small">These people made an account. They cannot see or change anything until you approve them.</span>
+            <h2>Waiting for a role ({waiting.length})</h2>
+            <span className="muted small">These people made an account. They see nothing until you pick their role and press Give role.</span>
           </div>
           <div className="list">
             {waiting.map((m) => (
@@ -45,7 +45,7 @@ export function Team() {
                 <select value={m.role} onChange={(e) => setRole(m.user_id, e.target.value as Role)} style={{ width: 'auto' }} aria-label={`Role for ${m.name}`}>
                   {ROLES.map((r) => <option key={r} value={r} title={ROLE_HELP[r]}>{ROLE_LABELS[r]}</option>)}
                 </select>
-                <button className="btn primary" onClick={() => approve(m, true)}>Approve</button>
+                <button className="btn primary" onClick={() => approve(m, true)}>Give role</button>
               </div>
             ))}
           </div>
